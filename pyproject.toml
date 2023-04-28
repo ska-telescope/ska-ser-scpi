@@ -35,6 +35,7 @@ PyYAML = "^6.0"
 sphinx-rtd-theme = "^1.0"
 sphinx-autodoc-typehints = "^1.19"
 ska-ser-devices = "^0.1.0"
+typing-extensions = "^4.5.0"
 
 [tool.pytest.ini_options]
 addopts = "-v"
