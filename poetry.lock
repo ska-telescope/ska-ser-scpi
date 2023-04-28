@@ -372,6 +372,24 @@ flake8 = ">=3"
 pydocstyle = ">=2.1"
 
 [[package]]
+name = "flake8-pyproject"
+version = "1.2.3"
+description = "Flake8 plug-in loading the configuration from pyproject.toml"
+category = "dev"
+optional = false
+python-versions = ">= 3.6"
+files = [
+    {file = "flake8_pyproject-1.2.3-py3-none-any.whl", hash = "sha256:6249fe53545205af5e76837644dc80b4c10037e73a0e5db87ff562d75fb5bd4a"},
+]
+
+[package.dependencies]
+Flake8 = ">=5"
+TOMLi = {version = "*", markers = "python_version < \"3.11\""}
+
+[package.extras]
+dev = ["pyTest", "pyTest-cov"]
+
+[[package]]
 name = "flake8-rst-docstrings"
 version = "0.3.0"
 description = "Python docstring reStructuredText (RST) validator for flake8"
@@ -1319,4 +1337,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "0fdf533ad5be9266c067677ce0fc92267a801dc189777b142ac3f3bbaefdb25e"
+content-hash = "0073abf5fa38b2ea341060342fe8feddeebde32d5d78be4eedfd57ce13ba1d8d"

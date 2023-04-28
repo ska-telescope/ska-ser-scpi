@@ -2,7 +2,7 @@
 name = "ska-ser-scpi"
 version = "0.0.1"
 description = "Support for SCPI in SKA"
-authors = ["Your Name <you@example.com>"]
+authors = ["Drew Devereux <drew.devereux@skao.int>"]
 license = "BSD-3-Clause"
 readme = "README.md"
 
@@ -27,6 +27,7 @@ flake8-rst-docstrings = "^0.3.0"
 darglint = "^1.8.1"
 mypy = "^1.2.0"
 types-pyyaml = "^6.0.12.9"
+flake8-pyproject = "^1.2.3"
 
 [tool.poetry.group.docs.dependencies]
 Sphinx = "^5.2"
@@ -37,6 +38,16 @@ ska-ser-devices = "^0.1.0"
 
 [tool.pytest.ini_options]
 addopts = "-v"
+
+[tool.flake8]
+docstring-style = "sphinx"
+rst-directives = "literalinclude"
+rst-roles = ["py:attr", "py:class", "py:const", "py:exc", "py:func", "py:meth", "py:mod"]
+enable = "DAR104"
+max-complexity = 10
+
+# E203 and W503 conflict with black
+ignore = ["E203", "W503"]
 
 [tool.mypy]
 mypy_path = "src/:tests/"
