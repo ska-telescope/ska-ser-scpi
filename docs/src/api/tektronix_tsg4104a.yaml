@@ -1,0 +1,46 @@
+model: TSG4104A
+poll_rate: 0.1
+timeout: 0.5
+supports_chains: yes
+attributes:
+  identity:
+    field: "*IDN"
+    type: str
+    value: Tektronix,TSG4104A,s/nC010133,ver2.03.26
+  reset:
+    field: "*RST"
+  frequency:
+    field: FREQ
+    type: float
+    unit: Hz
+    min_value: 950000
+    max_value: 4000000000
+    absolute_resolution: 0.0001  # User guide says "extraordinary frequency resolution (1 μHz at any frequency)"
+  power_dbm:
+    field: AMPR
+    type: float
+    unit: dBm
+    absolute_resolution: 0.3  # User guide says "Typical ±0.30 dB amplitude accuracy (0 dBm CW signal at 22 ºC) from 100 MHz to 6 GHz"
+  rf_output_on:
+    field: ENBR
+    type: bool
+  query_error:
+    field: "*ESR"
+    type: bit
+    bit: 2
+  device_error:
+    field: "*ESR"
+    type: bit
+    bit: 3
+  execution_error:
+    field: "*ESR"
+    type: bit
+    bit: 4
+  command_error:
+    field: "*ESR"
+    type: bit
+    bit: 5
+  power_cycled:
+    field: "*ESR"
+    type: bit
+    bit: 7
