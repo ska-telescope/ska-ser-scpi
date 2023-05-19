@@ -22,6 +22,7 @@ class ScpiClient:  # pylint: disable=too-few-public-methods
         self,
         bytes_client: ApplicationClient[bytes, bytes],
         chain: bool = True,
+        argument_separator: str = " ",
         encoding: str = "utf-8",
         timeout_retries: int = 2,
     ) -> None:
@@ -31,6 +32,8 @@ class ScpiClient:  # pylint: disable=too-few-public-methods
         :param bytes_client: the underlying bytes client to be
             used.
         :param chain: whether this client should chain SCPI commands.
+        :param argument_separator: the character which separates the
+            SCPI command and the argument.
         :param encoding: the encoding to use when converting strings to
             bytes and vice versa.
         :param timeout_retries: number of times to retry communications
@@ -40,6 +43,7 @@ class ScpiClient:  # pylint: disable=too-few-public-methods
         """
         self._bytes_client = bytes_client
         self._chain = chain
+        self._argument_separator = argument_separator
         self._encoding: Final = encoding
         self._timeout_retries: int = timeout_retries
 
@@ -65,6 +69,7 @@ class ScpiClient:  # pylint: disable=too-few-public-methods
         (setops, queries) = self._marshall_request(scpi_request)
 
         for request_bytes in setops:
+            print(request_bytes)
             self._bytes_client(request_bytes, expect_response=True)
 
         responses = []
@@ -99,7 +104,7 @@ class ScpiClient:  # pylint: disable=too-few-public-methods
         setops = []
         if scpi_request.setops:
             for setop, args in scpi_request.setops:
-                setop_str = " ".join([setop, *args])
+                setop_str = self._argument_separator.join([setop, *args])
                 setops.append(setop_str.encode(self._encoding))
             if self._chain:
                 setops = [b";".join(setops)]

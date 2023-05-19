@@ -14,6 +14,7 @@ class ScpiSimulator(ApplicationServer[bytes, bytes]):
         self,
         interface_definition: InterfaceDefinitionType,
         initial_values: dict[str, bool | float | str],
+        argument_separator: str = " ",
     ) -> None:
         """
         Initialise a new instance.
@@ -22,19 +23,21 @@ class ScpiSimulator(ApplicationServer[bytes, bytes]):
             simulated.
         :param initial_values: a dictionary of initial values for the
             simulator to take.
+        :param argument_separator: the character which separates the
+            SCPI command and the argument.
         """
         self._attribute_values: dict[str, SupportedAttributeType] = {}
 
         for name, definition in interface_definition["attributes"].items():
-            definition = list(definition.values())[0]
-            if "value" in definition:
-                self.set_attribute(name, definition["value"])
+            definition_values = list(definition.values())[0]
+            if "value" in definition_values:
+                self.set_attribute(name, definition_values["value"])
 
         for name, value in initial_values.items():
             self.set_attribute(name, value)
 
         scpi_server = ScpiServer(self, interface_definition["attributes"])
-        scpi_string_server = ScpiBytesServer(scpi_server)
+        scpi_string_server = ScpiBytesServer(scpi_server, argument_separator)
 
         marshaller = SentinelBytesMarshaller(
             interface_definition["sentinel_string"].encode()
