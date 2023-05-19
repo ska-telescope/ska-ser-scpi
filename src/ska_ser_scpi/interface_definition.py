@@ -12,6 +12,14 @@ from typing_extensions import NotRequired
 SupportedAttributeType = bool | float | str
 
 
+class ReadWriteType(TypedDict):
+    """Type specification for SCPI command read/write access levels."""
+
+    read: NotRequired[str]
+    write: NotRequired[str]
+    read_write: NotRequired[str]
+
+
 class AttributeDefinitionType(TypedDict):
     """Type specification for an attribute definition dictionary."""
 

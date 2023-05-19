@@ -26,6 +26,7 @@ class ScpiSimulator(ApplicationServer[bytes, bytes]):
         self._attribute_values: dict[str, SupportedAttributeType] = {}
 
         for name, definition in interface_definition["attributes"].items():
+            definition = list(definition.values())[0]
             if "value" in definition:
                 self.set_attribute(name, definition["value"])
 

@@ -13,7 +13,11 @@ class ScpiBytesServer:  # pylint: disable=too-few-public-methods
     object (if required).
     """
 
-    def __init__(self, scpi_server: ScpiServer, encoding: str = "utf-8") -> None:
+    def __init__(
+        self,
+        scpi_server: ScpiServer,
+        encoding: str = "utf-8",
+    ) -> None:
         """
         Initialise a new instance.
 

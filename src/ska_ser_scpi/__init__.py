@@ -52,6 +52,7 @@ from .bytes_server import ScpiBytesServer
 from .interface_definition import (
     AttributeDefinitionType,
     InterfaceDefinitionType,
+    ReadWriteType,
     SupportedAttributeType,
 )
 from .scpi_client import ScpiClient
