@@ -51,21 +51,21 @@ class AttributeClient:  # pylint: disable=too-few-public-methods
         for attribute, definition in self._attribute_map.items():
             for method in list(definition.keys()):
                 field = definition[method]["field"]
+                if field not in self._field_map:
+                    self._field_map[field] = {}
                 if "field_type" in definition[method]:
                     attribute_type = definition[method]["field_type"]
                     if attribute_type == "bit":
                         bit = definition[method]["bit"]
-                        if field not in self._field_map:
-                            self._field_map[field] = {
-                                f"{method}": {
-                                    "field_type": "bits",
-                                    "attributes": {},
-                                }
+                        if method not in self._field_map[field]:
+                            self._field_map[field][method] = {
+                                "field_type": "bits",
+                                "attributes": {},
                             }
-                        self._field_map[field][method]["attributes"][bit] = attribute
+                        self._field_map[field][method]["attributes"].update(
+                            {bit: attribute}
+                        )
                     else:
-                        if field not in self._field_map:
-                            self._field_map[field] = {}
                         self._field_map[field].update(
                             {
                                 f"{method}": {
@@ -113,7 +113,7 @@ class AttributeClient:  # pylint: disable=too-few-public-methods
             if field_type is None:
                 scpi_request.add_setop(field)  # command with no args
             elif field_type == "bit":
-                bit = definition["bit"]
+                bit = definition["write"]["bit"]
                 for this_field, these_args in scpi_request.setops:
                     if field == this_field:
                         current_flag = int(these_args[0])
@@ -151,16 +151,16 @@ class AttributeClient:  # pylint: disable=too-few-public-methods
         attribute_response = AttributeResponse()
 
         for field, field_value in scpi_response.responses.items():
-            definition_values = list(self._field_map[field].values())[0]
-            field_type = definition_values["field_type"]
+            definition = list(self._field_map[field].values())[0]
+            field_type = definition["field_type"]
             value: SupportedAttributeType  # for the type checker
             if field_type == "bits":
-                for bit, attribute in definition_values["attributes"].items():
+                for bit, attribute in definition["attributes"].items():
                     mask = 1 << bit
                     value = bool(int(field_value) & mask)
                     attribute_response.add_query_response(attribute, value)
             else:
-                attribute = definition_values["attribute"]
+                attribute = definition["attribute"]
                 if field_type == "bool":
                     value = field_value == "1"
                 elif field_type == "float":

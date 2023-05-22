@@ -54,6 +54,7 @@ from .interface_definition import (
     InterfaceDefinitionType,
     ReadWriteType,
     SupportedAttributeType,
+    expand_read_write,
 )
 from .scpi_client import ScpiClient
 from .scpi_payload import ScpiRequest, ScpiResponse

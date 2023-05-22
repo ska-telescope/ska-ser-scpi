@@ -43,3 +43,17 @@ InterfaceDefinitionType = TypedDict(
         "sentinel_string": str,
     },
 )
+
+
+def expand_read_write(
+    interface_definition: InterfaceDefinitionType,
+) -> InterfaceDefinitionType:
+    """Processing of read_write SCPI commands in the interface definition"""
+    for attribute, definition in interface_definition["attributes"].items():
+        if "read_write" in definition:
+            exploded_attribute = {
+                "read": interface_definition["attributes"][attribute]["read_write"],
+                "write": interface_definition["attributes"][attribute]["read_write"],
+            }
+            interface_definition["attributes"][attribute] = exploded_attribute
+    return interface_definition
