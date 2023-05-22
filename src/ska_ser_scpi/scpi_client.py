@@ -18,6 +18,7 @@ class ScpiClient:  # pylint: disable=too-few-public-methods
     response object.
     """
 
+    # pylint: disable=too-many-arguments
     def __init__(
         self,
         bytes_client: ApplicationClient[bytes, bytes],

@@ -31,6 +31,7 @@ __all__ = [
     "AttributeRequest",
     "AttributeResponse",
     "AttributeServerProtocol",
+    "expand_read_write_command",
     "ScpiBytesClientFactory",
     "ScpiBytesServer",
     "SupportedProtocol",

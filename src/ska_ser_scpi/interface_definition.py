@@ -48,7 +48,14 @@ InterfaceDefinitionType = TypedDict(
 def expand_read_write_command(
     interface_definition: InterfaceDefinitionType,
 ) -> InterfaceDefinitionType:
-    """Processing of read_write SCPI commands in the interface definition"""
+    """
+    Process read_write SCPI commands in the interface definition.
+
+    :param interface_definition: the original interface_definition dictionary
+
+    :returns: the updated interface definition which has expanded "read_write" commands
+        into separate "read" and "write" commands.
+    """
     for attribute, definition in interface_definition["attributes"].items():
         if "read_write" in definition:
             exploded_attribute = {
