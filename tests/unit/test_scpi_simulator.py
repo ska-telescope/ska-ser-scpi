@@ -35,7 +35,7 @@ def interface_definition_fixture() -> InterfaceDefinitionType:
     """
     size = 500
 
-    definition: dict[str, AttributeDefinitionType] = {}
+    definition: dict[str, dict[str, AttributeDefinitionType]] = {}
     for i in range(1, size + 1):
         definition[f"float{i}"] = {
             "read_write": {"field": f"FLT{i}", "field_type": "float"}
@@ -53,7 +53,7 @@ def interface_definition_fixture() -> InterfaceDefinitionType:
                 "bit": (i - 1) % 100,
             }
         }
-    interface_definition = {
+    interface_definition: InterfaceDefinitionType = {
         "model": "TEST",
         "supports_chains": True,
         "poll_rate": 0.1,

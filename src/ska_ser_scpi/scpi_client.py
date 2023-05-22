@@ -70,7 +70,6 @@ class ScpiClient:  # pylint: disable=too-few-public-methods
         (setops, queries) = self._marshall_request(scpi_request)
 
         for request_bytes in setops:
-            print(request_bytes)
             self._bytes_client(request_bytes, expect_response=True)
 
         responses = []

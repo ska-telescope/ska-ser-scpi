@@ -7,7 +7,7 @@ from typing_extensions import NotRequired
 
 from .attribute_payload import AttributeRequest, AttributeResponse
 from .attribute_server import AttributeServerProtocol
-from .interface_definition import AttributeDefinitionType, ReadWriteType
+from .interface_definition import AttributeDefinitionType
 from .scpi_payload import ScpiRequest, ScpiResponse
 
 
@@ -32,7 +32,7 @@ class ScpiServer:  # pylint: disable=too-few-public-methods
     def __init__(
         self,
         attribute_server: AttributeServerProtocol,
-        attribute_definitions: dict[str, ReadWriteType, AttributeDefinitionType],
+        attribute_definitions: dict[str, dict[str, AttributeDefinitionType]],
     ) -> None:
         """
         Initialise a new instance.
@@ -46,7 +46,7 @@ class ScpiServer:  # pylint: disable=too-few-public-methods
 
         self._attribute_map = attribute_definitions
 
-        self._field_map: dict[str, ReadWriteType, _FieldDefinitionType] = {}
+        self._field_map: dict[str, dict[str, _FieldDefinitionType]] = {}
         for attribute, definition in self._attribute_map.items():
             for method in list(definition.keys()):
                 field = definition[method]["field"]

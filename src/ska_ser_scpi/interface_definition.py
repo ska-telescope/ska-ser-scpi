@@ -12,14 +12,6 @@ from typing_extensions import NotRequired
 SupportedAttributeType = bool | float | str
 
 
-class ReadWriteType(TypedDict):
-    """Type specification for SCPI command read/write access levels."""
-
-    read: NotRequired[str]
-    write: NotRequired[str]
-    read_write: NotRequired[str]
-
-
 class AttributeDefinitionType(TypedDict):
     """Type specification for an attribute definition dictionary."""
 
@@ -39,7 +31,7 @@ InterfaceDefinitionType = TypedDict(
         "supports_chains": bool,
         "poll_rate": float,
         "timeout": float,
-        "attributes": dict[str, AttributeDefinitionType],
+        "attributes": dict[str, dict[str, AttributeDefinitionType]],
         "sentinel_string": str,
     },
 )
@@ -58,9 +50,9 @@ def expand_read_write_command(
     """
     for attribute, definition in interface_definition["attributes"].items():
         if "read_write" in definition:
-            exploded_attribute = {
+            expanded_attribute = {
                 "read": interface_definition["attributes"][attribute]["read_write"],
                 "write": interface_definition["attributes"][attribute]["read_write"],
             }
-            interface_definition["attributes"][attribute] = exploded_attribute
+            interface_definition["attributes"][attribute] = expanded_attribute
     return interface_definition

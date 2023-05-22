@@ -21,7 +21,7 @@ def interface_definition_fixture() -> InterfaceDefinitionType:
 
     :returns: an interface definition.
     """
-    interface_definition = {
+    interface_definition: InterfaceDefinitionType = {
         "model": "fruit",
         "poll_rate": 0.1,
         "timeout": 0.5,

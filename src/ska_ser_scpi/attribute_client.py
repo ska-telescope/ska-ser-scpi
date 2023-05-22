@@ -4,11 +4,7 @@ from typing import TypedDict
 from typing_extensions import NotRequired
 
 from .attribute_payload import AttributeRequest, AttributeResponse
-from .interface_definition import (
-    AttributeDefinitionType,
-    ReadWriteType,
-    SupportedAttributeType,
-)
+from .interface_definition import AttributeDefinitionType, SupportedAttributeType
 from .scpi_client import ScpiClient
 from .scpi_payload import ScpiRequest, ScpiResponse
 
@@ -34,7 +30,7 @@ class AttributeClient:  # pylint: disable=too-few-public-methods
     def __init__(
         self,
         scpi_client: ScpiClient,
-        attribute_definitions: dict[str, ReadWriteType, AttributeDefinitionType],
+        attribute_definitions: dict[str, dict[str, AttributeDefinitionType]],
     ) -> None:
         """
         Initialise a new instance.
@@ -47,7 +43,7 @@ class AttributeClient:  # pylint: disable=too-few-public-methods
 
         self._attribute_map = attribute_definitions
 
-        self._field_map: dict[str, ReadWriteType, _FieldDefinitionType] = {}
+        self._field_map: dict[str, dict[str, _FieldDefinitionType]] = {}
         for attribute, definition in self._attribute_map.items():
             for method in list(definition.keys()):
                 field = definition[method]["field"]
