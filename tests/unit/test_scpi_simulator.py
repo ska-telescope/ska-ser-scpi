@@ -20,7 +20,7 @@ from ska_ser_scpi.interface_definition import (
     AttributeDefinitionType,
     InterfaceDefinitionType,
     SupportedAttributeType,
-    expand_read_write,
+    expand_read_write_command,
 )
 from ska_ser_scpi.scpi_client import ScpiClient
 from ska_ser_scpi.scpi_simulator import ScpiSimulator
@@ -58,7 +58,7 @@ def interface_definition_fixture() -> InterfaceDefinitionType:
         "sentinel_string": "\r\n",
     }
 
-    interface_definition = expand_read_write(interface_definition)
+    interface_definition = expand_read_write_command(interface_definition)
     return interface_definition
 
 

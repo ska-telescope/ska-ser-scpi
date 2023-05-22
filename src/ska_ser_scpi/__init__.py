@@ -52,9 +52,8 @@ from .bytes_server import ScpiBytesServer
 from .interface_definition import (
     AttributeDefinitionType,
     InterfaceDefinitionType,
-    ReadWriteType,
     SupportedAttributeType,
-    expand_read_write,
+    expand_read_write_command,
 )
 from .scpi_client import ScpiClient
 from .scpi_payload import ScpiRequest, ScpiResponse

@@ -45,7 +45,7 @@ InterfaceDefinitionType = TypedDict(
 )
 
 
-def expand_read_write(
+def expand_read_write_command(
     interface_definition: InterfaceDefinitionType,
 ) -> InterfaceDefinitionType:
     """Processing of read_write SCPI commands in the interface definition"""

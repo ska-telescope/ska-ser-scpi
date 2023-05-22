@@ -10,7 +10,7 @@ from ska_ser_scpi import (  # AttributeClient,; ScpiClient,
     InterfaceDefinitionType,
     ScpiBytesServer,
     ScpiServer,
-    expand_read_write,
+    expand_read_write_command,
 )
 
 
@@ -39,7 +39,7 @@ def interface_definition_fixture() -> InterfaceDefinitionType:
         "sentinel_string": "\r\n",
     }
 
-    interface_definition = expand_read_write(interface_definition)
+    interface_definition = expand_read_write_command(interface_definition)
     return interface_definition
 
 
