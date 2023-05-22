@@ -34,7 +34,7 @@ class AttributeClient:  # pylint: disable=too-few-public-methods
     def __init__(
         self,
         scpi_client: ScpiClient,
-        attribute_definitions: dict[str, AttributeDefinitionType],
+        attribute_definitions: dict[str, ReadWriteType, AttributeDefinitionType],
     ) -> None:
         """
         Initialise a new instance.

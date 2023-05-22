@@ -37,13 +37,17 @@ def interface_definition_fixture() -> InterfaceDefinitionType:
 
     definition: dict[str, AttributeDefinitionType] = {}
     for i in range(1, size + 1):
-        definition[f"float{i}"] = {"read": {"field": f"FLT{i}", "field_type": "float"}}
-        definition[f"string{i}"] = {"write": {"field": f"STR{i}", "field_type": "str"}}
+        definition[f"float{i}"] = {
+            "read_write": {"field": f"FLT{i}", "field_type": "float"}
+        }
+        definition[f"string{i}"] = {
+            "read_write": {"field": f"STR{i}", "field_type": "str"}
+        }
         definition[f"boolean{i}"] = {
             "read_write": {"field": f"BOOL{i}", "field_type": "bool"}
         }
         definition[f"bit{i}"] = {
-            "read": {
+            "read_write": {
                 "field": f"FLGS{1+(i-1)//100}",
                 "field_type": "bit",
                 "bit": (i - 1) % 100,
@@ -206,18 +210,12 @@ def test_simulator_queries(
     """
     attribute_request = AttributeRequest()
 
-    queries = []
-    for attribute, definition in attribute_client._attribute_map.items():
-        if "read" in list(definition.keys()):
-            queries.append(attribute)
-
-    attribute_request.set_queries(*queries)
+    attribute_request.set_queries(*expected_values.keys())
 
     attribute_response = attribute_client.send_receive(attribute_request)
 
     for key, value in expected_values.items():
-        if key in queries:
-            assert attribute_response.responses[key] == value, (
-                f"Expected key {key} to have value {value}, but it has value "
-                f"{attribute_response.responses[key]}."
-            )
+        assert attribute_response.responses[key] == value, (
+            f"Expected key {key} to have value {value}, but it has value "
+            f"{attribute_response.responses[key]}."
+        )

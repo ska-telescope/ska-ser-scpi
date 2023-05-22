@@ -32,7 +32,7 @@ class ScpiServer:  # pylint: disable=too-few-public-methods
     def __init__(
         self,
         attribute_server: AttributeServerProtocol,
-        attribute_definitions: dict[str, AttributeDefinitionType],
+        attribute_definitions: dict[str, ReadWriteType, AttributeDefinitionType],
     ) -> None:
         """
         Initialise a new instance.
