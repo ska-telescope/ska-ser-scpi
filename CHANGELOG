@@ -2,6 +2,10 @@
 
 ## unreleased
 
+## 0.2.1
+
+* [LOW-473] Include the argument separator spec in the InterfaceDefinitionType
+
 ## 0.2.0
 
 * [LOW-473]
