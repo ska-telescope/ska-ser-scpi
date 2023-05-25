@@ -41,6 +41,7 @@ def interface_definition_fixture() -> InterfaceDefinitionType:
             },
         },
         "sentinel_string": "\r\n",
+        "argument_separator": " ",
         "return_response": True,
     }
 
