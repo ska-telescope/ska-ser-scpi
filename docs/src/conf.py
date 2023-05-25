@@ -4,10 +4,8 @@ import sys
 
 sys.path.insert(0, os.path.abspath('../../src'))
 
-
 def setup(app):
     app.add_css_file('css/custom.css')
-
 
 project = 'ska-ser-scpi'
 copyright = '2023, SKAO'
