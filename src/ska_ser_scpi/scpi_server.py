@@ -32,7 +32,7 @@ class ScpiServer:  # pylint: disable=too-few-public-methods
     def __init__(
         self,
         attribute_server: AttributeServerProtocol,
-        attribute_definitions: dict[str, AttributeDefinitionType],
+        attribute_definitions: dict[str, dict[str, AttributeDefinitionType]],
     ) -> None:
         """
         Initialise a new instance.
@@ -46,26 +46,35 @@ class ScpiServer:  # pylint: disable=too-few-public-methods
 
         self._attribute_map = attribute_definitions
 
-        self._field_map: dict[str, _FieldDefinitionType] = {}
+        self._field_map: dict[str, dict[str, _FieldDefinitionType]] = {}
         for attribute, definition in self._attribute_map.items():
-            field = definition["field"]
-            if "field_type" in definition:
-                attribute_type = definition["field_type"]
-                if attribute_type == "bit":
-                    bit = definition["bit"]
-                    if field not in self._field_map:
-                        self._field_map[field] = {
-                            "field_type": "bits",
-                            "attributes": {},
-                        }
-                    self._field_map[field]["attributes"][bit] = attribute
+            for method in list(definition.keys()):
+                field = definition[method]["field"]
+                if field not in self._field_map:
+                    self._field_map[field] = {}
+                if "field_type" in definition[method]:
+                    attribute_type = definition[method]["field_type"]
+                    if attribute_type == "bit":
+                        bit = definition[method]["bit"]
+                        if method not in self._field_map[field]:
+                            self._field_map[field][method] = {
+                                "field_type": "bits",
+                                "attributes": {},
+                            }
+                        self._field_map[field][method]["attributes"].update(
+                            {bit: attribute}
+                        )
+                    else:
+                        self._field_map[field].update(
+                            {
+                                f"{method}": {
+                                    "field_type": attribute_type,
+                                    "attribute": attribute,
+                                }
+                            }
+                        )
                 else:
-                    self._field_map[field] = {
-                        "field_type": attribute_type,
-                        "attribute": attribute,
-                    }
-            else:
-                self._field_map[field] = {"attribute": attribute}
+                    self._field_map[field] = {f"{method}": {"attribute": attribute}}
 
     def receive_send(self, scpi_request: ScpiRequest) -> ScpiResponse:
         """
@@ -99,23 +108,23 @@ class ScpiServer:  # pylint: disable=too-few-public-methods
         queries: list[str] = []
         for field in scpi_request.queries:
             definition = self._field_map[field]
-            if definition["field_type"] == "bits":
-                queries.extend(definition["attributes"].values())
+            if definition["read"]["field_type"] == "bits":
+                queries.extend(definition["read"]["attributes"].values())
             else:
-                queries.append(definition["attribute"])
+                queries.append(definition["read"]["attribute"])
         attribute_request.set_queries(*queries)
 
         for field, args in scpi_request.setops:
             definition = self._field_map[field]
-            field_type = definition.get("field_type", None)
+            field_type = definition["write"].get("field_type", None)
             if field_type == "bits":
                 value = int(args[0])  # TODO: Handle >1 args error case
-                for bit, attribute in definition["attributes"].items():
+                for bit, attribute in definition["write"]["attributes"].items():
                     mask = 1 << bit
                     attribute_value = bool(value & mask)
                     attribute_request.add_setop(attribute, attribute_value)
             else:
-                attribute = definition["attribute"]
+                attribute = definition["write"]["attribute"]
                 if field_type is None:  # command with no args
                     attribute_request.add_setop(attribute)
                 elif field_type == "bool":
@@ -146,7 +155,7 @@ class ScpiServer:  # pylint: disable=too-few-public-methods
         scpi_response = ScpiResponse()
 
         for attribute in attribute_response.responses:
-            definition = self._attribute_map[attribute]
+            definition = list(self._attribute_map[attribute].values())[0]
             attribute_type = definition["field_type"]
             field = definition["field"]
             attribute_value = attribute_response.responses[attribute]

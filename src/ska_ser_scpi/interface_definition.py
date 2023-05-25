@@ -31,7 +31,29 @@ InterfaceDefinitionType = TypedDict(
         "supports_chains": bool,
         "poll_rate": float,
         "timeout": float,
-        "attributes": dict[str, AttributeDefinitionType],
+        "attributes": dict[str, dict[str, AttributeDefinitionType]],
         "sentinel_string": str,
+        "return_response": bool,
     },
 )
+
+
+def expand_read_write_command(
+    interface_definition: InterfaceDefinitionType,
+) -> InterfaceDefinitionType:
+    """
+    Process read_write SCPI commands in the interface definition.
+
+    :param interface_definition: the original interface_definition dictionary
+
+    :returns: the updated interface definition which has expanded "read_write" commands
+        into separate "read" and "write" commands.
+    """
+    for attribute, definition in interface_definition["attributes"].items():
+        if "read_write" in definition:
+            expanded_attribute = {
+                "read": interface_definition["attributes"][attribute]["read_write"],
+                "write": interface_definition["attributes"][attribute]["read_write"],
+            }
+            interface_definition["attributes"][attribute] = expanded_attribute
+    return interface_definition

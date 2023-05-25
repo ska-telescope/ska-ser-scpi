@@ -31,6 +31,7 @@ __all__ = [
     "AttributeRequest",
     "AttributeResponse",
     "AttributeServerProtocol",
+    "expand_read_write_command",
     "ScpiBytesClientFactory",
     "ScpiBytesServer",
     "SupportedProtocol",
@@ -53,6 +54,7 @@ from .interface_definition import (
     AttributeDefinitionType,
     InterfaceDefinitionType,
     SupportedAttributeType,
+    expand_read_write_command,
 )
 from .scpi_client import ScpiClient
 from .scpi_payload import ScpiRequest, ScpiResponse

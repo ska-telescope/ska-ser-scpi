@@ -13,15 +13,23 @@ class ScpiBytesServer:  # pylint: disable=too-few-public-methods
     object (if required).
     """
 
-    def __init__(self, scpi_server: ScpiServer, encoding: str = "utf-8") -> None:
+    def __init__(
+        self,
+        scpi_server: ScpiServer,
+        argument_separator: str = " ",
+        encoding: str = "utf-8",
+    ) -> None:
         """
         Initialise a new instance.
 
         :param scpi_server: the underlying SCPI server to be used.
+        :param argument_separator: the character which separates the
+            SCPI command and the argument.
         :param encoding: encoding for converting between strings and
             bytes.
         """
         self._scpi_server = scpi_server
+        self._argument_separator = argument_separator
         self._encoding = encoding
 
     def receive_send(self, request_bytes: bytes) -> bytes:
@@ -52,7 +60,7 @@ class ScpiBytesServer:  # pylint: disable=too-few-public-methods
             if command.endswith("?"):
                 scpi_request.add_query(command[:-1])
             else:
-                scpi_request.add_setop(*command.split(" "))
+                scpi_request.add_setop(*command.split(self._argument_separator))
         return scpi_request
 
     def _marshall_response(self, scpi_response: ScpiResponse) -> bytes:

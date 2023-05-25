@@ -20,6 +20,7 @@ from ska_ser_scpi.interface_definition import (
     AttributeDefinitionType,
     InterfaceDefinitionType,
     SupportedAttributeType,
+    expand_read_write_command,
 )
 from ska_ser_scpi.scpi_client import ScpiClient
 from ska_ser_scpi.scpi_simulator import ScpiSimulator
@@ -34,24 +35,36 @@ def interface_definition_fixture() -> InterfaceDefinitionType:
     """
     size = 500
 
-    definition: dict[str, AttributeDefinitionType] = {}
+    definition: dict[str, dict[str, AttributeDefinitionType]] = {}
     for i in range(1, size + 1):
-        definition[f"float{i}"] = {"field": f"FLT{i}", "field_type": "float"}
-        definition[f"string{i}"] = {"field": f"STR{i}", "field_type": "str"}
-        definition[f"boolean{i}"] = {"field": f"BOOL{i}", "field_type": "bool"}
-        definition[f"bit{i}"] = {
-            "field": f"FLGS{1+(i-1)//100}",
-            "field_type": "bit",
-            "bit": (i - 1) % 100,
+        definition[f"float{i}"] = {
+            "read_write": {"field": f"FLT{i}", "field_type": "float"}
         }
-    return {
+        definition[f"string{i}"] = {
+            "read_write": {"field": f"STR{i}", "field_type": "str"}
+        }
+        definition[f"boolean{i}"] = {
+            "read_write": {"field": f"BOOL{i}", "field_type": "bool"}
+        }
+        definition[f"bit{i}"] = {
+            "read_write": {
+                "field": f"FLGS{1+(i-1)//100}",
+                "field_type": "bit",
+                "bit": (i - 1) % 100,
+            }
+        }
+    interface_definition: InterfaceDefinitionType = {
         "model": "TEST",
         "supports_chains": True,
         "poll_rate": 0.1,
         "timeout": 0.5,
         "attributes": definition,
         "sentinel_string": "\r\n",
+        "return_response": False,
     }
+
+    interface_definition = expand_read_write_command(interface_definition)
+    return interface_definition
 
 
 @pytest.fixture(name="initial_values")
@@ -136,7 +149,9 @@ def attribute_client_fixture(
     """
     host, port = simulator_server.server_address
     bytes_client = ScpiBytesClientFactory().create_client("tcp", host, port, 3.0)
-    scpi_client = ScpiClient(bytes_client)
+    scpi_client = ScpiClient(
+        bytes_client, return_response=interface_definition["return_response"]
+    )
     attribute_client = AttributeClient(scpi_client, interface_definition["attributes"])
     return attribute_client
 
@@ -197,7 +212,8 @@ def test_simulator_queries(
     :param expected_values: dictionary of expected simulator values.
     """
     attribute_request = AttributeRequest()
-    attribute_request.set_queries(*(expected_values.keys()))
+
+    attribute_request.set_queries(*expected_values.keys())
 
     attribute_response = attribute_client.send_receive(attribute_request)
 

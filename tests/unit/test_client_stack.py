@@ -10,6 +10,7 @@ from ska_ser_scpi import (
     AttributeResponse,
     InterfaceDefinitionType,
     ScpiClient,
+    expand_read_write_command,
 )
 
 
@@ -20,21 +21,31 @@ def interface_definition_fixture() -> InterfaceDefinitionType:
 
     :returns: an interface definition.
     """
-    return {
+    interface_definition: InterfaceDefinitionType = {
         "model": "fruit",
         "poll_rate": 0.1,
         "timeout": 0.5,
         "supports_chains": True,
         "attributes": {
-            "name": {"field": "NAME", "field_type": "str"},
-            "juiciness": {"field": "JUIC", "field_type": "float"},
-            "peeled": {"field": "PEEL", "field_type": "bool"},
-            "overripe": {"field": "FLAGS", "field_type": "bit", "bit": 0},
-            "under-ripe": {"field": "FLAGS", "field_type": "bit", "bit": 1},
-            "chilled": {"field": "FLAGS", "field_type": "bit", "bit": 7},
+            "name": {"read": {"field": "NAME", "field_type": "str"}},
+            "juiciness": {"read_write": {"field": "JUIC", "field_type": "float"}},
+            "peeled": {"read_write": {"field": "PEEL", "field_type": "bool"}},
+            "overripe": {
+                "read_write": {"field": "FLAGS", "field_type": "bit", "bit": 0}
+            },
+            "under-ripe": {
+                "read_write": {"field": "FLAGS", "field_type": "bit", "bit": 1}
+            },
+            "chilled": {
+                "read_write": {"field": "FLAGS", "field_type": "bit", "bit": 7}
+            },
         },
         "sentinel_string": "\r\n",
+        "return_response": True,
     }
+
+    interface_definition = expand_read_write_command(interface_definition)
+    return interface_definition
 
 
 @pytest.fixture(name="attribute_request")
@@ -108,7 +119,9 @@ def attribute_client_fixture(
     :returns: an attribute client.
     """
     scpi_client = ScpiClient(
-        mock_bytes_client, chain=interface_definition["supports_chains"]
+        mock_bytes_client,
+        chain=interface_definition["supports_chains"],
+        return_response=interface_definition["return_response"],
     )
     return AttributeClient(scpi_client, interface_definition["attributes"])
 

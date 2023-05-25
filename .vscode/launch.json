@@ -1,0 +1,38 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "server",
+            "type": "python",
+            "module": "pytest",
+            "request": "launch",
+            "args": [
+                "-v",
+                "tests/unit/test_server_stack.py"
+            ]
+        },
+        {
+            "name": "scpi sim",
+            "type": "python",
+            "module": "pytest",
+            "request": "launch",
+            "args": [
+                "-v",
+                "tests/unit/test_scpi_simulator.py"
+            ]
+        },
+        {
+            "name": "client stack",
+            "type": "python",
+            "module": "pytest",
+            "request": "launch",
+            "args": [
+                "-v",
+                "tests/unit/test_client_stack.py::test_client_stack"
+            ]
+        },
+    ]
+}

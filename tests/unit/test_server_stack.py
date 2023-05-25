@@ -10,6 +10,7 @@ from ska_ser_scpi import (  # AttributeClient,; ScpiClient,
     InterfaceDefinitionType,
     ScpiBytesServer,
     ScpiServer,
+    expand_read_write_command,
 )
 
 
@@ -20,21 +21,27 @@ def interface_definition_fixture() -> InterfaceDefinitionType:
 
     :returns: an interface definition.
     """
-    return {
+    interface_definition: InterfaceDefinitionType = {
         "model": "fruit",
         "poll_rate": 0.1,
         "timeout": 0.5,
         "supports_chains": True,
         "attributes": {
-            "name": {"field": "NAME", "field_type": "str"},
-            "juiciness": {"field": "JUIC", "field_type": "float"},
-            "peeled": {"field": "PEEL", "field_type": "bool"},
-            "overripe": {"field": "FLAGS", "field_type": "bit", "bit": 0},
-            "under-ripe": {"field": "FLAGS", "field_type": "bit", "bit": 1},
-            "chilled": {"field": "FLAGS", "field_type": "bit", "bit": 7},
+            "name": {"read": {"field": "NAME", "field_type": "str"}},
+            "juiciness": {"read_write": {"field": "JUIC", "field_type": "float"}},
+            "peeled": {"read": {"field": "PEEL", "field_type": "bool"}},
+            "overripe": {
+                "read_write": {"field": "FLAGS", "field_type": "bit", "bit": 0}
+            },
+            "under-ripe": {"read": {"field": "FLAGS", "field_type": "bit", "bit": 1}},
+            "chilled": {"write": {"field": "FLAGS", "field_type": "bit", "bit": 7}},
         },
         "sentinel_string": "\r\n",
+        "return_response": False,
     }
+
+    interface_definition = expand_read_write_command(interface_definition)
+    return interface_definition
 
 
 @pytest.fixture(name="request_bytes")
@@ -66,7 +73,7 @@ def expected_attribute_request_fixture() -> AttributeRequest:
     """
     attribute_request = AttributeRequest()
     attribute_request.set_queries(
-        "name", "juiciness", "peeled", "overripe", "under-ripe", "chilled"
+        "name", "juiciness", "peeled", "overripe", "under-ripe"
     )
     return attribute_request
 
