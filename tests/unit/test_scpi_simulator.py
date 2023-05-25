@@ -60,6 +60,7 @@ def interface_definition_fixture() -> InterfaceDefinitionType:
         "timeout": 0.5,
         "attributes": definition,
         "sentinel_string": "\r\n",
+        "return_response": False,
     }
 
     interface_definition = expand_read_write_command(interface_definition)
@@ -148,7 +149,9 @@ def attribute_client_fixture(
     """
     host, port = simulator_server.server_address
     bytes_client = ScpiBytesClientFactory().create_client("tcp", host, port, 3.0)
-    scpi_client = ScpiClient(bytes_client)
+    scpi_client = ScpiClient(
+        bytes_client, return_response=interface_definition["return_response"]
+    )
     attribute_client = AttributeClient(scpi_client, interface_definition["attributes"])
     return attribute_client
 

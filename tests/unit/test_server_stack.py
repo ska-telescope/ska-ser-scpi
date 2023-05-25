@@ -37,6 +37,7 @@ def interface_definition_fixture() -> InterfaceDefinitionType:
             "chilled": {"write": {"field": "FLAGS", "field_type": "bit", "bit": 7}},
         },
         "sentinel_string": "\r\n",
+        "return_response": False,
     }
 
     interface_definition = expand_read_write_command(interface_definition)

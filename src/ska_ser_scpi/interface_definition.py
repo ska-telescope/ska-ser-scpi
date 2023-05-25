@@ -33,6 +33,7 @@ InterfaceDefinitionType = TypedDict(
         "timeout": float,
         "attributes": dict[str, dict[str, AttributeDefinitionType]],
         "sentinel_string": str,
+        "return_response": bool,
     },
 )
 

@@ -24,6 +24,7 @@ class ScpiClient:  # pylint: disable=too-few-public-methods
         bytes_client: ApplicationClient[bytes, bytes],
         chain: bool = True,
         argument_separator: str = " ",
+        return_response: bool = False,
         encoding: str = "utf-8",
         timeout_retries: int = 2,
     ) -> None:
@@ -35,6 +36,8 @@ class ScpiClient:  # pylint: disable=too-few-public-methods
         :param chain: whether this client should chain SCPI commands.
         :param argument_separator: the character which separates the
             SCPI command and the argument.
+        :param return_response: whether this device returns a package
+            in response to a sent SCPI command.
         :param encoding: the encoding to use when converting strings to
             bytes and vice versa.
         :param timeout_retries: number of times to retry communications
@@ -45,6 +48,7 @@ class ScpiClient:  # pylint: disable=too-few-public-methods
         self._bytes_client = bytes_client
         self._chain = chain
         self._argument_separator = argument_separator
+        self._return_response: bool = return_response
         self._encoding: Final = encoding
         self._timeout_retries: int = timeout_retries
 
@@ -70,7 +74,9 @@ class ScpiClient:  # pylint: disable=too-few-public-methods
         (setops, queries) = self._marshall_request(scpi_request)
 
         for request_bytes in setops:
-            self._bytes_client(request_bytes, expect_response=True)
+            self._bytes_client(
+                request_bytes, expect_response=self._return_response
+            )  # type:ignore[call-overload]
 
         responses = []
         for request_bytes in queries:

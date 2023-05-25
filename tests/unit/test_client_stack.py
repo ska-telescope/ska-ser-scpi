@@ -41,6 +41,7 @@ def interface_definition_fixture() -> InterfaceDefinitionType:
             },
         },
         "sentinel_string": "\r\n",
+        "return_response": True,
     }
 
     interface_definition = expand_read_write_command(interface_definition)
@@ -118,7 +119,9 @@ def attribute_client_fixture(
     :returns: an attribute client.
     """
     scpi_client = ScpiClient(
-        mock_bytes_client, chain=interface_definition["supports_chains"]
+        mock_bytes_client,
+        chain=interface_definition["supports_chains"],
+        return_response=interface_definition["return_response"],
     )
     return AttributeClient(scpi_client, interface_definition["attributes"])
 
