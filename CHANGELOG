@@ -2,6 +2,13 @@
 
 ## unreleased
 
+## 0.2.0
+
+* [LOW-473]
+  * Support read, write and read_write keys in YAML file (breaking change)
+  * Support equals separator
+  * Support return response spec
+
 ## 0.1.0
 
 * [LOW-464] Bootstrap repo and add SCPI package
