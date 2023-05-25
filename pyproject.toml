@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "ska-ser-scpi"
-version = "0.2.0"
+version = "0.2.1"
 description = "Support for SCPI in SKA"
 authors = ["Drew Devereux <drew.devereux@skao.int>"]
 license = "BSD-3-Clause"
