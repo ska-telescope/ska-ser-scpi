@@ -60,6 +60,7 @@ def interface_definition_fixture() -> InterfaceDefinitionType:
         "timeout": 0.5,
         "attributes": definition,
         "sentinel_string": "\r\n",
+        "argument_separator": " ",
         "return_response": False,
     }
 
