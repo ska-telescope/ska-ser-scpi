@@ -161,6 +161,8 @@ class AttributeClient:  # pylint: disable=too-few-public-methods
                     value = field_value == "1"
                 elif field_type == "float":
                     value = float(field_value)
+                elif field_type == "int":
+                    value = int(field_value)
                 else:
                     value = field_value
                 attribute_response.add_query_response(attribute, value)

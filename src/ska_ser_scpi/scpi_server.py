@@ -133,6 +133,9 @@ class ScpiServer:  # pylint: disable=too-few-public-methods
                 elif field_type == "float":
                     float_args = [float(arg) for arg in args]
                     attribute_request.add_setop(attribute, *float_args)
+                elif field_type == "int":
+                    int_args = [int(arg) for arg in args]
+                    attribute_request.add_setop(attribute, *int_args)
                 elif field_type == "str":
                     attribute_request.add_setop(attribute, *args)
                 else:
