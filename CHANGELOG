@@ -4,15 +4,15 @@
 
 ## 0.2.1
 
-* [LOW-473] Include the argument separator spec in the InterfaceDefinitionType
+- [LOW-473] Include the argument separator spec in the InterfaceDefinitionType
 
 ## 0.2.0
 
-* [LOW-473]
-  * Support read, write and read_write keys in YAML file (breaking change)
-  * Support equals separator
-  * Support return response spec
+- [LOW-473]
+  - Support read, write and read_write keys in YAML file (breaking change)
+  - Support equals separator
+  - Support return response spec
 
 ## 0.1.0
 
-* [LOW-464] Bootstrap repo and add SCPI package
+- [LOW-464] Bootstrap repo and add SCPI package
