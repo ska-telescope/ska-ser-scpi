@@ -89,7 +89,8 @@ class ScpiServer:  # pylint: disable=too-few-public-methods
         scpi_response = self._marshall_response(attribute_response)
         return scpi_response
 
-    def _unmarshall_request(
+    # pylint: disable-next=too-many-locals, too-many-branches
+    def _unmarshall_request(  # noqa: C901
         self,
         scpi_request: ScpiRequest,
     ) -> AttributeRequest:
