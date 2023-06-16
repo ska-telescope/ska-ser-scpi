@@ -2,6 +2,11 @@
 
 ## unreleased
 
+## 0.3.0
+
+* [LOW-478] Support int type attributes
+* [LOW-478] Use rsplit on argument separator
+
 ## 0.2.1
 
 * [LOW-473] Include the argument separator spec in the InterfaceDefinitionType
