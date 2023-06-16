@@ -13,7 +13,7 @@ class ScpiSimulator(ApplicationServer[bytes, bytes]):
     def __init__(
         self,
         interface_definition: InterfaceDefinitionType,
-        initial_values: dict[str, bool | float | str],
+        initial_values: dict[str, SupportedAttributeType],
         argument_separator: str = " ",
     ) -> None:
         """

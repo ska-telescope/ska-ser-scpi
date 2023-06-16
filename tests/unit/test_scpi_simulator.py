@@ -46,6 +46,9 @@ def interface_definition_fixture() -> InterfaceDefinitionType:
         definition[f"boolean{i}"] = {
             "read_write": {"field": f"BOOL{i}", "field_type": "bool"}
         }
+        definition[f"int{i}"] = {
+            "read_write": {"field": f"INT{i}", "field_type": "int"}
+        }
         definition[f"bit{i}"] = {
             "read_write": {
                 "field": f"FLGS{1+(i-1)//100}",
@@ -82,6 +85,7 @@ def initial_values_fixture() -> dict[str, SupportedAttributeType]:
         values[f"float{i}"] = float(i)
         values[f"string{i}"] = str(i)
         values[f"boolean{i}"] = i % 2 == 0
+        values[f"int{i}"] = i * 2
         values[f"bit{i}"] = i % 2 == 0
     return values
 

@@ -89,7 +89,8 @@ class ScpiServer:  # pylint: disable=too-few-public-methods
         scpi_response = self._marshall_response(attribute_response)
         return scpi_response
 
-    def _unmarshall_request(
+    # pylint: disable-next=too-many-locals, too-many-branches
+    def _unmarshall_request(  # noqa: C901
         self,
         scpi_request: ScpiRequest,
     ) -> AttributeRequest:
@@ -133,6 +134,9 @@ class ScpiServer:  # pylint: disable=too-few-public-methods
                 elif field_type == "float":
                     float_args = [float(arg) for arg in args]
                     attribute_request.add_setop(attribute, *float_args)
+                elif field_type == "int":
+                    int_args = [int(arg) for arg in args]
+                    attribute_request.add_setop(attribute, *int_args)
                 elif field_type == "str":
                     attribute_request.add_setop(attribute, *args)
                 else:

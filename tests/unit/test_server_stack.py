@@ -29,6 +29,7 @@ def interface_definition_fixture() -> InterfaceDefinitionType:
         "attributes": {
             "name": {"read": {"field": "NAME", "field_type": "str"}},
             "juiciness": {"read_write": {"field": "JUIC", "field_type": "float"}},
+            "rotten": {"read_write": {"field": "ROTT", "field_type": "int"}},
             "peeled": {"read": {"field": "PEEL", "field_type": "bool"}},
             "overripe": {
                 "read_write": {"field": "FLAGS", "field_type": "bit", "bit": 0}
@@ -52,7 +53,7 @@ def request_bytes_fixture() -> bytes:
 
     :returns: request bytes.
     """
-    return b"NAME?;JUIC?;PEEL?;FLAGS?"
+    return b"NAME?;JUIC?;ROTT?;PEEL?;FLAGS?"
 
 
 @pytest.fixture(name="expected_response_bytes")
@@ -62,7 +63,7 @@ def expected_response_bytes_fixture() -> bytes:
 
     :returns: the expected response bytes.
     """
-    return b"orange;98.7;1;130"
+    return b"orange;98.7;30;1;130"
 
 
 @pytest.fixture(name="expected_attribute_request")
@@ -74,7 +75,7 @@ def expected_attribute_request_fixture() -> AttributeRequest:
     """
     attribute_request = AttributeRequest()
     attribute_request.set_queries(
-        "name", "juiciness", "peeled", "overripe", "under-ripe"
+        "name", "juiciness", "rotten", "peeled", "overripe", "under-ripe"
     )
     return attribute_request
 
@@ -89,7 +90,7 @@ def mock_attribute_server_fixture() -> unittest.mock.Mock:
     attribute_response = AttributeResponse()
     attribute_response.add_query_response("name", "orange")
     attribute_response.add_query_response("juiciness", 98.7)
-    attribute_response.add_query_response("name", "orange")
+    attribute_response.add_query_response("rotten", 30)
     attribute_response.add_query_response("peeled", True)
     attribute_response.add_query_response("overripe", False)
     attribute_response.add_query_response("under-ripe", True)

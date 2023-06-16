@@ -29,6 +29,7 @@ def interface_definition_fixture() -> InterfaceDefinitionType:
         "attributes": {
             "name": {"read": {"field": "NAME", "field_type": "str"}},
             "juiciness": {"read_write": {"field": "JUIC", "field_type": "float"}},
+            "rotten": {"read_write": {"field": "ROTT", "field_type": "int"}},
             "peeled": {"read_write": {"field": "PEEL", "field_type": "bool"}},
             "overripe": {
                 "read_write": {"field": "FLAGS", "field_type": "bit", "bit": 0}
@@ -58,7 +59,7 @@ def attribute_request_fixture() -> AttributeRequest:
     """
     attribute_request = AttributeRequest()
     attribute_request.set_queries(
-        "name", "juiciness", "peeled", "overripe", "under-ripe"
+        "name", "juiciness", "rotten", "peeled", "overripe", "under-ripe"
     )
     attribute_request.add_setop("peeled", True)
     attribute_request.add_setop("chilled", True)
@@ -75,6 +76,7 @@ def expected_attribute_response_fixture() -> AttributeResponse:
     attribute_response = AttributeResponse()
     attribute_response.add_query_response("name", "orange")
     attribute_response.add_query_response("juiciness", 98.7)
+    attribute_response.add_query_response("rotten", 30)
     attribute_response.add_query_response("peeled", True)
     attribute_response.add_query_response("overripe", False)
     attribute_response.add_query_response("under-ripe", True)
@@ -89,7 +91,7 @@ def expected_bytes_call_fixture() -> bytes:
 
     :returns: the expected bytes call.
     """
-    return b"NAME?;JUIC?;PEEL?;FLAGS?"
+    return b"NAME?;JUIC?;ROTT?;PEEL?;FLAGS?"
 
 
 @pytest.fixture(name="mock_bytes_client")
@@ -100,7 +102,7 @@ def mock_bytes_client_fixture() -> unittest.mock.Mock:
     :returns: a mock attribute server.
     """
     mock_bytes_client = unittest.mock.Mock()
-    mock_bytes_client.return_value = b"orange;98.7;1;130"
+    mock_bytes_client.return_value = b"orange;98.7;30;1;130"
     return mock_bytes_client
 
 
