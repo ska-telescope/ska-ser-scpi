@@ -1,6 +1,7 @@
 """This module provides a SCPI request and response."""
 from __future__ import annotations
 
+import logging
 
 class ScpiRequest:
     """
@@ -26,6 +27,7 @@ class ScpiRequest:
 
         :param field: name of the field to be queried.
         """
+        logging.debug("Add SCPI request field: %s", field)
         self._queries[field] = None
 
     def add_setop(self, field: str, *args: str, replace: bool = False) -> None:
@@ -40,6 +42,7 @@ class ScpiRequest:
         :param replace: whether to replace any existing setop with the
             same field name.
         """
+        logging.debug("Add SCPI field to be set: %s", field)
         if replace:
             # pylint: disable-next=consider-using-enumerate
             for i in range(len(self._setops)):
@@ -91,6 +94,9 @@ class ScpiRequest:
             return False
         return True
 
+    def __repr__(self):
+        return f"{self._setops}"
+
 
 class ScpiResponse:
     """
@@ -111,6 +117,7 @@ class ScpiResponse:
         :param field: name of the queried SCPI field.
         :param value: value of the queried SCPI field.
         """
+        logging.debug("Add SCPI query response field: %s (value %s)", field, value)
         self._responses[field] = value
 
     @property
@@ -137,3 +144,6 @@ class ScpiResponse:
         if self._responses != other._responses:
             return False
         return True
+
+    def __repr__(self):
+        return f"{self._responses}"

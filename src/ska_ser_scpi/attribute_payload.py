@@ -189,9 +189,9 @@ class AttributeRequest:
 
         :returns: a string representation of this object.
         """
-        return f"""AttributeRequest with
-                   \tqueries: {repr(list(self._queries))}
-                   \tsetops: {repr(self._setops)}"""
+        return "AttributeRequest with \n" \
+               f"\tqueries: {repr(list(self._queries))}" \
+               f"\tsetops: {repr(self._setops)}"
 
 
 class AttributeResponse:
@@ -241,3 +241,6 @@ class AttributeResponse:
         if self._responses != other._responses:
             return False
         return True
+
+    def __repr__(self) -> str:
+        return f"{self._responses}"

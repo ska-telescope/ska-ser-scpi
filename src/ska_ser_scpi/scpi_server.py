@@ -1,6 +1,7 @@
 """This module provides a SCPI server."""
 from __future__ import annotations
 
+import logging
 from typing import TypedDict
 
 from typing_extensions import NotRequired
@@ -48,9 +49,12 @@ class ScpiServer:  # pylint: disable=too-few-public-methods
 
         self._field_map: dict[str, dict[str, _FieldDefinitionType]] = {}
         for attribute, definition in self._attribute_map.items():
+            logging.debug("Process SCPI attribute %s", attribute)
             for method in list(definition.keys()):
+                logging.debug("Process SCPI method %s", method)
                 field = definition[method]["field"]
                 if field not in self._field_map:
+                    logging.info("Add field %s", field)
                     self._field_map[field] = {}
                 if "field_type" in definition[method]:
                     attribute_type = definition[method]["field_type"]
@@ -75,6 +79,8 @@ class ScpiServer:  # pylint: disable=too-few-public-methods
                         )
                 else:
                     self._field_map[field] = {f"{method}": {"attribute": attribute}}
+        for field in self._field_map:
+            logging.info("Defined field %s [%s]", field, self._field_map[field])
 
     def receive_send(self, scpi_request: ScpiRequest) -> ScpiResponse:
         """
@@ -84,9 +90,15 @@ class ScpiServer:  # pylint: disable=too-few-public-methods
 
         :returns: details of the SCPI response.
         """
+        logging.info("SCPI receive %s", scpi_request)
         attribute_request = self._unmarshall_request(scpi_request)
-        attribute_response = self._attribute_server.receive_send(attribute_request)
+        try:
+            attribute_response = self._attribute_server.receive_send(attribute_request)
+        except ValueError as a_err:
+            logging.error("Could not receive/send : %s", str(a_err))
+            return None
         scpi_response = self._marshall_response(attribute_response)
+        logging.info("SCPI response: %s", attribute_response)
         return scpi_response
 
     # pylint: disable-next=too-many-locals, too-many-branches
@@ -108,16 +120,41 @@ class ScpiServer:  # pylint: disable=too-few-public-methods
 
         queries: list[str] = []
         for field in scpi_request.queries:
-            definition = self._field_map[field]
+            try:
+                definition = self._field_map[field]
+            except KeyError:
+                logging.warning("Could not read definition for field '%s'", field)
+                continue
             if definition["read"]["field_type"] == "bits":
                 queries.extend(definition["read"]["attributes"].values())
             else:
                 queries.append(definition["read"]["attribute"])
+        logging.debug("Loaded %d queries : %s", len(queries), queries)
         attribute_request.set_queries(*queries)
 
         for field, args in scpi_request.setops:
-            definition = self._field_map[field]
-            field_type = definition["write"].get("field_type", None)
+            if field not in self._field_map:
+                logging.warning("Field '%s' not found", field)
+                args = field.split(':')[-1]
+                field = ':'.join(field.split(':')[:-1])
+            if field not in self._field_map:
+                args = field.split(':')[-1]
+                logging.warning("Field '%s' not found", field)
+                field = ':'.join(field.split(':')[:-1])
+            logging.debug("Field %s args: %s", field, args)
+            # if field not in self._field_map:
+            #     logging.warning("No definition for field '%s'", field)
+            try:
+                definition = self._field_map[field]
+            except KeyError:
+                logging.error("No definition for field '%s'", field)
+                field = field.split(':')[:-1]
+                continue
+            try:
+                field_type = definition["write"].get("field_type", None)
+            except KeyError:
+                logging.error("No definition for field type 'write'")
+                continue
             if field_type == "bits":
                 value = int(args[0])  # TODO: Handle >1 args error case
                 for bit, attribute in definition["write"]["attributes"].items():
