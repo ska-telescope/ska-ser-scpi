@@ -1,4 +1,5 @@
 """This module provides a simulator framework for a SCPI instrument."""
+import logging
 from ska_ser_devices.client_server import ApplicationServer, SentinelBytesMarshaller
 
 from .attribute_payload import AttributeRequest, AttributeResponse
@@ -19,16 +20,15 @@ class ScpiSimulator(ApplicationServer[bytes, bytes]):
         """
         Initialise a new instance.
 
-        :param interface_definition: definition of the interface to be
-            simulated.
-        :param initial_values: a dictionary of initial values for the
-            simulator to take.
-        :param argument_separator: the character which separates the
-            SCPI command and the argument.
+        :param interface_definition: definition of the interface to be simulated.
+        :param initial_values: dictionary of initial values for the simulator to take.
+        :param argument_separator: the character which separates the SCPI command and the argument.
         """
+        logging.debug("SCPI simulator with separator '%s'", argument_separator)
         self._attribute_values: dict[str, SupportedAttributeType] = {}
 
         for name, definition in interface_definition["attributes"].items():
+            logging.debug("Interface %s attributes %s", name, definition)
             definition_values = list(definition.values())[0]
             if "value" in definition_values:
                 self.set_attribute(name, definition_values["value"])
@@ -96,6 +96,7 @@ class ScpiSimulator(ApplicationServer[bytes, bytes]):
         :param name: name of the simulator attribute to be set.
         :param value: new value of the simulator attribute.
         """
+        logging.debug("Set attribute %s to %s", name, value)
         self._attribute_values[name] = value
 
     def get_attribute(self, name: str) -> SupportedAttributeType:

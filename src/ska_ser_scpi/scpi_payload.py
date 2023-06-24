@@ -42,8 +42,8 @@ class ScpiRequest:
         :param replace: whether to replace any existing setop with the
             same field name.
         """
-        logging.debug("Add SCPI field to be set: %s", field)
         if replace:
+            logging.debug("Replace SCPI field '%s' in request : %s", field, args)
             # pylint: disable-next=consider-using-enumerate
             for i in range(len(self._setops)):
                 (this_field, _) = self._setops[i]
@@ -53,7 +53,10 @@ class ScpiRequest:
             else:
                 self._setops.append((field, list(args)))
         else:
+            logging.debug("Add SCPI field '%s' to request : %s", field, args)
             self._setops.append((field, list(args)))
+        logging.info("Field %s has %d operations %s",
+                     field, len(self._setops), self._setops)
 
     @property
     def queries(self) -> list[str]:

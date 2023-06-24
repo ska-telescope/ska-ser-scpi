@@ -38,10 +38,8 @@ class ScpiServer:  # pylint: disable=too-few-public-methods
         """
         Initialise a new instance.
 
-        :param attribute_server: the underlying attribute server to be
-            used.
-        :param attribute_definitions: definitions of the attributes that
-            the SCPI interface supports.
+        :param attribute_server: the underlying attribute server to be used.
+        :param attribute_definitions: attributes that SCPI interface supports.
         """
         self._attribute_server = attribute_server
 
@@ -87,7 +85,6 @@ class ScpiServer:  # pylint: disable=too-few-public-methods
         Send a SCPI request, and receive a SCPI response.
 
         :param scpi_request: details of the SCPI request to be sent.
-
         :returns: details of the SCPI response.
         """
         logging.info("SCPI receive %s", scpi_request)
@@ -110,11 +107,8 @@ class ScpiServer:  # pylint: disable=too-few-public-methods
         Unmarshall a SCPI request into an attribute request.
 
         :param scpi_request: the SCPI request object to be unmarshalled.
-
         :returns: an attribute request object.
-
-        :raises ValueError: if an unsupported attribute type is
-            encountered.
+        :raises ValueError: if an unsupported attribute type is encountered.
         """
         attribute_request = AttributeRequest()
 
@@ -123,7 +117,8 @@ class ScpiServer:  # pylint: disable=too-few-public-methods
             try:
                 definition = self._field_map[field]
             except KeyError:
-                logging.warning("Could not read definition for field '%s'", field)
+                logging.warning("Could not read definition for field '%s'",
+                                field)
                 continue
             if definition["read"]["field_type"] == "bits":
                 queries.extend(definition["read"]["attributes"].values())
@@ -133,14 +128,14 @@ class ScpiServer:  # pylint: disable=too-few-public-methods
         attribute_request.set_queries(*queries)
 
         for field, args in scpi_request.setops:
-            if field not in self._field_map:
-                logging.warning("Field '%s' not found", field)
-                args = field.split(':')[-1]
-                field = ':'.join(field.split(':')[:-1])
-            if field not in self._field_map:
-                args = field.split(':')[-1]
-                logging.warning("Field '%s' not found", field)
-                field = ':'.join(field.split(':')[:-1])
+            # if field not in self._field_map:
+            #     logging.warning("Field '%s' not found", field)
+            #     args = field.split(':')[-1]
+            #     field = ':'.join(field.split(':')[:-1])
+            # if field not in self._field_map:
+            #     args = field.split(':')[-1]
+            #     logging.warning("Field '%s' not found", field)
+            #     field = ':'.join(field.split(':')[:-1])
             logging.debug("Field %s args: %s", field, args)
             # if field not in self._field_map:
             #     logging.warning("No definition for field '%s'", field)
@@ -156,7 +151,8 @@ class ScpiServer:  # pylint: disable=too-few-public-methods
                 logging.error("No definition for field type 'write'")
                 continue
             if field_type == "bits":
-                value = int(args[0])  # TODO: Handle >1 args error case
+                # TODO: Handle >1 args error case
+                value = int(args[0])
                 for bit, attribute in definition["write"]["attributes"].items():
                     mask = 1 << bit
                     attribute_value = bool(value & mask)
@@ -188,9 +184,7 @@ class ScpiServer:  # pylint: disable=too-few-public-methods
         """
         Marshall an attribute response down into a SCPI response.
 
-        :param attribute_response: the attribute response object to be
-            marshalled.
-
+        :param attribute_response: attribute response object to be marshalled.
         :returns: a SCPI response object.
         """
         scpi_response = ScpiResponse()
@@ -209,7 +203,10 @@ class ScpiServer:  # pylint: disable=too-few-public-methods
                     field_value = str(int(field_value) | bitmask)
                 scpi_response.add_query_response(field, field_value)
             elif attribute_type == "bool":
-                scpi_response.add_query_response(field, "1" if attribute_value else "0")
+                scpi_response.add_query_response(
+                    field,
+                    "1" if attribute_value else "0"
+                )
             else:
                 scpi_response.add_query_response(field, str(attribute_value))
 
