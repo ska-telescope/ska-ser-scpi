@@ -110,4 +110,9 @@ class ScpiSimulator(ApplicationServer[bytes, bytes]):
 
         :returns: the value of the attribute.
         """
-        return self._attribute_values[name]
+        try:
+            r_val = self._attribute_values[name]
+        except KeyError:
+            logging.error("Could not read attribute %s", name)
+            r_val = None
+        return r_val
