@@ -1,11 +1,14 @@
 """This module provides a simulator framework for a SCPI instrument."""
 import logging
+
 from ska_ser_devices.client_server import ApplicationServer, SentinelBytesMarshaller
 
 from .attribute_payload import AttributeRequest, AttributeResponse
 from .bytes_server import ScpiBytesServer
 from .interface_definition import InterfaceDefinitionType, SupportedAttributeType
 from .scpi_server import ScpiServer
+
+logger = logging.getLogger(__name__)
 
 
 class ScpiSimulator(ApplicationServer[bytes, bytes]):
@@ -24,11 +27,11 @@ class ScpiSimulator(ApplicationServer[bytes, bytes]):
         :param initial_values: dictionary of initial values for the simulator to take.
         :param argument_separator: the character which separates the SCPI command and the argument.
         """
-        logging.debug("SCPI simulator with separator '%s'", argument_separator)
+        logger.debug("SCPI simulator with separator '%s'", argument_separator)
         self._attribute_values: dict[str, SupportedAttributeType] = {}
 
         for name, definition in interface_definition["attributes"].items():
-            logging.debug("Interface %s attributes %s", name, definition)
+            logger.debug("Interface %s attributes %s", name, definition)
             definition_values = list(definition.values())[0]
             if "value" in definition_values:
                 self.set_attribute(name, definition_values["value"])
@@ -96,7 +99,7 @@ class ScpiSimulator(ApplicationServer[bytes, bytes]):
         :param name: name of the simulator attribute to be set.
         :param value: new value of the simulator attribute.
         """
-        logging.debug("Set attribute %s to %s", name, value)
+        logger.debug("Set attribute %s to %s", name, value)
         self._attribute_values[name] = value
 
     def get_attribute(self, name: str) -> SupportedAttributeType:
@@ -113,6 +116,6 @@ class ScpiSimulator(ApplicationServer[bytes, bytes]):
         try:
             r_val = self._attribute_values[name]
         except KeyError:
-            logging.error("Could not read attribute %s", name)
+            logger.error("Could not read attribute %s", name)
             r_val = None
         return r_val

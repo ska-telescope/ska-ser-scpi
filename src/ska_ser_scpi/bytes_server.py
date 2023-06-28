@@ -1,10 +1,11 @@
 """This module provides a SCPI bytes server."""
 from __future__ import annotations
-
 import logging
 
 from .scpi_payload import ScpiRequest, ScpiResponse
 from .scpi_server import ScpiServer
+
+logger = logging.getLogger(__name__)
 
 
 class ScpiBytesServer:  # pylint: disable=too-few-public-methods
@@ -76,7 +77,7 @@ class ScpiBytesServer:  # pylint: disable=too-few-public-methods
         try:
             response_str = ";".join(scpi_response.responses.values())
         except AttributeError as scpi_err:
-            logging.error("Could not read SCPI response: %s", scpi_err)
+            logger.error("Could not read SCPI response: %s", scpi_err)
             return None
         response_bytes = response_str.encode(self._encoding)
         return response_bytes

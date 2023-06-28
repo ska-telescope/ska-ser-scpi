@@ -1,7 +1,9 @@
 """This module provides a SCPI request and response."""
 from __future__ import annotations
-
 import logging
+
+logger = logging.getLogger(__name__)
+
 
 class ScpiRequest:
     """
@@ -27,7 +29,7 @@ class ScpiRequest:
 
         :param field: name of the field to be queried.
         """
-        logging.debug("Add SCPI request field: %s", field)
+        logger.debug("Add SCPI request field: %s", field)
         self._queries[field] = None
 
     def add_setop(self, field: str, *args: str, replace: bool = False) -> None:
@@ -43,7 +45,7 @@ class ScpiRequest:
             same field name.
         """
         if replace:
-            logging.debug("Replace SCPI field '%s' in request : %s", field, args)
+            logger.debug("Replace SCPI field '%s' in request : %s", field, args)
             # pylint: disable-next=consider-using-enumerate
             for i in range(len(self._setops)):
                 (this_field, _) = self._setops[i]
@@ -53,9 +55,9 @@ class ScpiRequest:
             else:
                 self._setops.append((field, list(args)))
         else:
-            logging.debug("Add SCPI field '%s' to request : %s", field, args)
+            logger.debug("Add SCPI field '%s' to request : %s", field, args)
             self._setops.append((field, list(args)))
-        logging.info("Field %s has %d operations %s",
+        logger.info("Field %s has %d operations %s",
                      field, len(self._setops), self._setops)
 
     @property
@@ -120,7 +122,7 @@ class ScpiResponse:
         :param field: name of the queried SCPI field.
         :param value: value of the queried SCPI field.
         """
-        logging.debug("Add SCPI query response field: %s (value %s)", field, value)
+        logger.debug("Add SCPI query response field: %s (value %s)", field, value)
         self._responses[field] = value
 
     @property

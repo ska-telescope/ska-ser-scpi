@@ -1,4 +1,6 @@
 """This module provides an attribute client."""
+import logging
+
 from typing import TypedDict
 
 from typing_extensions import NotRequired
@@ -7,6 +9,8 @@ from .attribute_payload import AttributeRequest, AttributeResponse
 from .interface_definition import AttributeDefinitionType, SupportedAttributeType
 from .scpi_client import ScpiClient
 from .scpi_payload import ScpiRequest, ScpiResponse
+
+logger = logging.getLogger(__name__)
 
 
 class _FieldDefinitionType(TypedDict):
@@ -39,6 +43,7 @@ class AttributeClient:  # pylint: disable=too-few-public-methods
         :param attribute_definitions: definitions of the attributes that
             the SCPI interface supports.
         """
+        logger.info("Initialise %d attributes", len(attribute_definitions))
         self._scpi_client = scpi_client
 
         self._attribute_map = attribute_definitions
@@ -47,6 +52,7 @@ class AttributeClient:  # pylint: disable=too-few-public-methods
         for attribute, definition in self._attribute_map.items():
             for method in list(definition.keys()):
                 field = definition[method]["field"]
+                logger.info("Add field %s", field)
                 if field not in self._field_map:
                     self._field_map[field] = {}
                 if "field_type" in definition[method]:

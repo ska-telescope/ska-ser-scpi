@@ -1,6 +1,7 @@
 """This module provides a SCPI client."""
 from __future__ import annotations
 
+import logging
 import re
 import socket
 from typing import Final
@@ -8,6 +9,8 @@ from typing import Final
 from ska_ser_devices.client_server.application import ApplicationClient
 
 from .scpi_payload import ScpiRequest, ScpiResponse
+
+logger = logging.getLogger(__name__)
 
 
 class ScpiClient:  # pylint: disable=too-few-public-methods
@@ -118,7 +121,9 @@ class ScpiClient:  # pylint: disable=too-few-public-methods
         queries = []
         if scpi_request.queries:
             for query in scpi_request.queries:
+                # TODO add question mark here?
                 query_str = f"{query}?"
+                logger.info("Add query %s", query_str)
                 queries.append(query_str.encode(self._encoding))
             if self._chain:
                 queries = [b";".join(queries)]
@@ -147,6 +152,7 @@ class ScpiClient:  # pylint: disable=too-few-public-methods
         for response_bytes in responses:
             response_str = response_bytes.decode(self._encoding).strip()
             if response_str:
+                logger.info("Add response %s", response_str)
                 values.extend(self._response_regex.findall(response_str))
 
         if len(values) != len(fields):

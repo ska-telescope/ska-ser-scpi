@@ -11,6 +11,8 @@ from .attribute_server import AttributeServerProtocol
 from .interface_definition import AttributeDefinitionType
 from .scpi_payload import ScpiRequest, ScpiResponse
 
+logger = logging.getLogger(__name__)
+
 
 class _FieldDefinitionType(TypedDict):
     # TODO: Tighten this up.
@@ -47,12 +49,12 @@ class ScpiServer:  # pylint: disable=too-few-public-methods
 
         self._field_map: dict[str, dict[str, _FieldDefinitionType]] = {}
         for attribute, definition in self._attribute_map.items():
-            logging.debug("Process SCPI attribute %s", attribute)
+            logger.debug("Process SCPI attribute %s", attribute)
             for method in list(definition.keys()):
-                logging.debug("Process SCPI method %s", method)
+                logger.debug("Process SCPI method %s", method)
                 field = definition[method]["field"]
                 if field not in self._field_map:
-                    logging.info("Add field %s", field)
+                    logger.info("Add field %s", field)
                     self._field_map[field] = {}
                 if "field_type" in definition[method]:
                     attribute_type = definition[method]["field_type"]
@@ -78,7 +80,7 @@ class ScpiServer:  # pylint: disable=too-few-public-methods
                 else:
                     self._field_map[field] = {f"{method}": {"attribute": attribute}}
         for field in self._field_map:
-            logging.info("Defined field %s [%s]", field, self._field_map[field])
+            logger.info("Defined field %s [%s]", field, self._field_map[field])
 
     def receive_send(self, scpi_request: ScpiRequest) -> ScpiResponse:
         """
@@ -87,15 +89,15 @@ class ScpiServer:  # pylint: disable=too-few-public-methods
         :param scpi_request: details of the SCPI request to be sent.
         :returns: details of the SCPI response.
         """
-        logging.info("SCPI receive %s", scpi_request)
+        logger.info("SCPI receive %s", scpi_request)
         attribute_request = self._unmarshall_request(scpi_request)
         try:
             attribute_response = self._attribute_server.receive_send(attribute_request)
         except ValueError as a_err:
-            logging.error("Could not receive/send : %s", str(a_err))
+            logger.error("Could not receive/send : %s", str(a_err))
             return None
         scpi_response = self._marshall_response(attribute_response)
-        logging.info("SCPI response: %s", attribute_response)
+        logger.info("SCPI response: %s", attribute_response)
         return scpi_response
 
     # pylint: disable-next=too-many-locals, too-many-branches
@@ -117,38 +119,38 @@ class ScpiServer:  # pylint: disable=too-few-public-methods
             try:
                 definition = self._field_map[field]
             except KeyError:
-                logging.warning("Could not read definition for field '%s'",
+                logger.warning("Could not read definition for field '%s'",
                                 field)
                 continue
             if definition["read"]["field_type"] == "bits":
                 queries.extend(definition["read"]["attributes"].values())
             else:
                 queries.append(definition["read"]["attribute"])
-        logging.debug("Loaded %d queries : %s", len(queries), queries)
+        logger.debug("Loaded %d queries : %s", len(queries), queries)
         attribute_request.set_queries(*queries)
 
         for field, args in scpi_request.setops:
             # if field not in self._field_map:
-            #     logging.warning("Field '%s' not found", field)
+            #     logger.warning("Field '%s' not found", field)
             #     args = field.split(':')[-1]
             #     field = ':'.join(field.split(':')[:-1])
             # if field not in self._field_map:
             #     args = field.split(':')[-1]
-            #     logging.warning("Field '%s' not found", field)
+            #     logger.warning("Field '%s' not found", field)
             #     field = ':'.join(field.split(':')[:-1])
-            logging.debug("Field %s args: %s", field, args)
+            logger.debug("Field %s args: %s", field, args)
             # if field not in self._field_map:
-            #     logging.warning("No definition for field '%s'", field)
+            #     logger.warning("No definition for field '%s'", field)
             try:
                 definition = self._field_map[field]
             except KeyError:
-                logging.error("No definition for field '%s'", field)
+                logger.error("No definition for field '%s'", field)
                 field = field.split(':')[:-1]
                 continue
             try:
                 field_type = definition["write"].get("field_type", None)
             except KeyError:
-                logging.error("No definition for field type 'write'")
+                logger.error("No definition for field type 'write'")
                 continue
             if field_type == "bits":
                 # TODO: Handle >1 args error case
