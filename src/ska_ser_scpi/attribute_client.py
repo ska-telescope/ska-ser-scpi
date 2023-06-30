@@ -1,4 +1,5 @@
 """This module provides an attribute client."""
+import logging
 from typing import TypedDict
 
 from typing_extensions import NotRequired
@@ -31,6 +32,7 @@ class AttributeClient:  # pylint: disable=too-few-public-methods
         self,
         scpi_client: ScpiClient,
         attribute_definitions: dict[str, dict[str, AttributeDefinitionType]],
+        logger: logging.Logging,
     ) -> None:
         """
         Initialise a new instance.
@@ -39,6 +41,7 @@ class AttributeClient:  # pylint: disable=too-few-public-methods
         :param attribute_definitions: definitions of the attributes that
             the SCPI interface supports.
         """
+        self.logger = logger
         self._scpi_client = scpi_client
 
         self._attribute_map = attribute_definitions
@@ -83,6 +86,7 @@ class AttributeClient:  # pylint: disable=too-few-public-methods
         :returns: details of the attribute response.
         """
         scpi_request = self._marshall_request(attribute_request)
+        self.logger.debug(f"Sending the following scpi request: {scpi_request}.")
         scpi_response = self._scpi_client.send_receive(scpi_request)
         attribute_response = self._unmarshall_response(scpi_response)
         return attribute_response
