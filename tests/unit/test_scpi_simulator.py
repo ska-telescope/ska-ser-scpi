@@ -4,7 +4,6 @@ This module tests the SPCI-over-TCP simulator.
 It is also intended to stress-test the marshalling / unmarshalling
 functionality.
 """
-
 import random
 import threading
 from contextlib import contextmanager

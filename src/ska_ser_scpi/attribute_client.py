@@ -32,7 +32,7 @@ class AttributeClient:  # pylint: disable=too-few-public-methods
         self,
         scpi_client: ScpiClient,
         attribute_definitions: dict[str, dict[str, AttributeDefinitionType]],
-        logger: logging.Logging,
+        logger: logging.Logger = logging.Logger(name="test"),
     ) -> None:
         """
         Initialise a new instance.
@@ -40,6 +40,7 @@ class AttributeClient:  # pylint: disable=too-few-public-methods
         :param scpi_client: The underlying SCPI client interface.
         :param attribute_definitions: definitions of the attributes that
             the SCPI interface supports.
+        :param logger: a logger.
         """
         self.logger = logger
         self._scpi_client = scpi_client
@@ -86,7 +87,7 @@ class AttributeClient:  # pylint: disable=too-few-public-methods
         :returns: details of the attribute response.
         """
         scpi_request = self._marshall_request(attribute_request)
-        self.logger.debug(f"Sending the following scpi request: {scpi_request}.")
+        self.logger.debug("Fetching attribute field from scpi_request")
         scpi_response = self._scpi_client.send_receive(scpi_request)
         attribute_response = self._unmarshall_response(scpi_response)
         return attribute_response
@@ -104,6 +105,7 @@ class AttributeClient:  # pylint: disable=too-few-public-methods
 
         for attribute in attribute_request.queries:
             field = self._attribute_map[attribute]["read"]["field"]
+            self.logger.debug(msg=f"Identified the following field: {field}")
             scpi_request.add_query(field)
 
         for attribute, args in attribute_request.setops:
