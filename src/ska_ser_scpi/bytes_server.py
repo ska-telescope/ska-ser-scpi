@@ -1,6 +1,6 @@
 """This module provides a SCPI bytes server."""
 from __future__ import annotations
-
+import logging
 from .scpi_payload import ScpiRequest, ScpiResponse
 from .scpi_server import ScpiServer
 
@@ -12,6 +12,9 @@ class ScpiBytesServer:  # pylint: disable=too-few-public-methods
     Used to receive a SCPI request object, and then send a SCPI response
     object (if required).
     """
+
+    logger = logging.Logger("bytes_server")
+    logger.setLevel(logging.DEBUG)
 
     def __init__(
         self,
@@ -56,6 +59,7 @@ class ScpiBytesServer:  # pylint: disable=too-few-public-methods
         scpi_request = ScpiRequest()
         request_str = request_bytes.decode(self._encoding).strip()
         commands = [command.strip() for command in request_str.split(";")]
+        ScpiBytesServer.logger.info(msg=f"Commands being sent: {commands}")
         for command in commands:
             if command.endswith("?"):
                 scpi_request.add_query(command[:-1])

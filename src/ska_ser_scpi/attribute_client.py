@@ -28,7 +28,7 @@ class AttributeClient:  # pylint: disable=too-few-public-methods
     response.
     """
 
-    logger = logging.Logger(name="att_client")
+    logger = logging.Logger("att_client")
     logger.setLevel(logging.DEBUG)
 
     def __init__(

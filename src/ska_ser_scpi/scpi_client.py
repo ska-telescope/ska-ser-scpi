@@ -77,6 +77,8 @@ class ScpiClient:  # pylint: disable=too-few-public-methods
         response_fields = scpi_request.queries
         (setops, queries) = self._marshall_request(scpi_request)
 
+        ScpiClient.logger.info(msg=f"Query being sent: {queries}")
+
         for request_bytes in setops:
             self._bytes_client(
                 request_bytes, expect_response=self._return_response
@@ -97,6 +99,9 @@ class ScpiClient:  # pylint: disable=too-few-public-methods
                     responses.append(response_bytes)
                     break
 
+        ScpiClient.logger.info(
+            msg=f"Response received: {responses} for fields: {response_fields}"
+        )
         scpi_response = self._unmarshall_response(responses, response_fields)
         return scpi_response
 
