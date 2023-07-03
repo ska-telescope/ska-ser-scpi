@@ -19,7 +19,7 @@ class ScpiClient:  # pylint: disable=too-few-public-methods
     response object.
     """
 
-    logger = logging.getLogger()
+    logger = logging.getLogger("scpi_client")
     logger.setLevel(logging.DEBUG)
 
     # pylint: disable=too-many-arguments
@@ -149,9 +149,9 @@ class ScpiClient:  # pylint: disable=too-few-public-methods
         scpi_response = ScpiResponse()
         values: list[str] = []
         for response_bytes in responses:
-            ScpiClient.logger.debug(msg=f"Received response bytes: {response_bytes!r}")
+            ScpiClient.logger.info(msg=f"Received response bytes: {response_bytes!r}")
             response_str = response_bytes.decode(self._encoding).strip()
-            ScpiClient.logger.debug(msg=f"Unpacked response bytes: {response_str}")
+            ScpiClient.logger.info(msg=f"Unpacked response bytes: {response_str}")
             if response_str:
                 values.extend(self._response_regex.findall(response_str))
 

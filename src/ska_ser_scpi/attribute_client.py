@@ -28,15 +28,8 @@ class AttributeClient:  # pylint: disable=too-few-public-methods
     response.
     """
 
-    logging.basicConfig(
-        level=logging.DEBUG,
-        format="%(asctime)s [%(levelname)s] %(message)s",
-        handlers=[
-            logging.FileHandler("debug.log"),
-            logging.StreamHandler(),
-        ],
-    )
-    logger = logging.getLogger()
+    logger = logging.Logger(name="att_client")
+    logger.setLevel(logging.DEBUG)
 
     def __init__(
         self,
@@ -168,7 +161,7 @@ class AttributeClient:  # pylint: disable=too-few-public-methods
                     mask = 1 << bit
                     value = bool(int(field_value) & mask)
                     attribute_response.add_query_response(attribute, value)
-                    AttributeClient.logger.debug(
+                    AttributeClient.logger.info(
                         msg=f"Query response, attribute: {attribute}, value: {value}"
                     )
             else:
@@ -182,7 +175,7 @@ class AttributeClient:  # pylint: disable=too-few-public-methods
                 else:
                     value = field_value
                 attribute_response.add_query_response(attribute, value)
-                AttributeClient.logger.debug(
+                AttributeClient.logger.info(
                     msg=f"Query response added, attribute: {attribute}, value: {value}"
                 )
 
