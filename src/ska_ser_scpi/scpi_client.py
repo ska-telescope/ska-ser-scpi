@@ -1,6 +1,7 @@
 """This module provides a SCPI client."""
 from __future__ import annotations
 
+import logging
 import re
 import socket
 from typing import Final
@@ -17,6 +18,9 @@ class ScpiClient:  # pylint: disable=too-few-public-methods
     Used to transmit a SCPI request object, and then receive a SCPI
     response object.
     """
+
+    logger = logging.getLogger()
+    logger.setLevel(logging.DEBUG)
 
     # pylint: disable=too-many-arguments
     def __init__(
@@ -145,7 +149,9 @@ class ScpiClient:  # pylint: disable=too-few-public-methods
         scpi_response = ScpiResponse()
         values: list[str] = []
         for response_bytes in responses:
+            ScpiClient.logger.debug(msg=f"Received response bytes: {response_bytes!r}")
             response_str = response_bytes.decode(self._encoding).strip()
+            ScpiClient.logger.debug(msg=f"Unpacked response bytes: {response_str}")
             if response_str:
                 values.extend(self._response_regex.findall(response_str))
 

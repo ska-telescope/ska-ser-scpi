@@ -28,11 +28,20 @@ class AttributeClient:  # pylint: disable=too-few-public-methods
     response.
     """
 
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format="%(asctime)s [%(levelname)s] %(message)s",
+        handlers=[
+            logging.FileHandler("debug.log"),
+            logging.StreamHandler(),
+        ],
+    )
+    logger = logging.getLogger()
+
     def __init__(
         self,
         scpi_client: ScpiClient,
         attribute_definitions: dict[str, dict[str, AttributeDefinitionType]],
-        logger: logging.Logger = logging.Logger(name="test"),
     ) -> None:
         """
         Initialise a new instance.
@@ -40,13 +49,10 @@ class AttributeClient:  # pylint: disable=too-few-public-methods
         :param scpi_client: The underlying SCPI client interface.
         :param attribute_definitions: definitions of the attributes that
             the SCPI interface supports.
-        :param logger: a logger.
         """
-        self.logger = logger
         self._scpi_client = scpi_client
 
         self._attribute_map = attribute_definitions
-
         self._field_map: dict[str, dict[str, _FieldDefinitionType]] = {}
         for attribute, definition in self._attribute_map.items():
             for method in list(definition.keys()):
@@ -87,7 +93,7 @@ class AttributeClient:  # pylint: disable=too-few-public-methods
         :returns: details of the attribute response.
         """
         scpi_request = self._marshall_request(attribute_request)
-        self.logger.debug("Fetching attribute field from scpi_request")
+        AttributeClient.logger.info("Fetching attribute field from scpi_request")
         scpi_response = self._scpi_client.send_receive(scpi_request)
         attribute_response = self._unmarshall_response(scpi_response)
         return attribute_response
@@ -105,12 +111,13 @@ class AttributeClient:  # pylint: disable=too-few-public-methods
 
         for attribute in attribute_request.queries:
             field = self._attribute_map[attribute]["read"]["field"]
-            self.logger.debug(msg=f"Identified the following field: {field}")
+            AttributeClient.logger.debug(msg=f"Identified the following field: {field}")
             scpi_request.add_query(field)
 
         for attribute, args in attribute_request.setops:
             definition = self._attribute_map[attribute]
             field = definition["write"]["field"]
+            AttributeClient.logger.debug(msg=f"Identified the following field: {field}")
             field_type = definition["write"].get("field_type", None)
             if field_type is None:
                 scpi_request.add_setop(field)  # command with no args
@@ -161,6 +168,9 @@ class AttributeClient:  # pylint: disable=too-few-public-methods
                     mask = 1 << bit
                     value = bool(int(field_value) & mask)
                     attribute_response.add_query_response(attribute, value)
+                    AttributeClient.logger.debug(
+                        msg=f"Query response, attribute: {attribute}, value: {value}"
+                    )
             else:
                 attribute = definition["attribute"]
                 if field_type == "bool":
@@ -172,5 +182,8 @@ class AttributeClient:  # pylint: disable=too-few-public-methods
                 else:
                     value = field_value
                 attribute_response.add_query_response(attribute, value)
+                AttributeClient.logger.debug(
+                    msg=f"Query response added, attribute: {attribute}, value: {value}"
+                )
 
         return attribute_response
