@@ -1,9 +1,9 @@
 """This module provides a SCPI server."""
 from __future__ import annotations
 
-import struct
 from typing import TypedDict
 
+import numpy as np
 from typing_extensions import NotRequired
 
 from .attribute_payload import AttributeRequest, AttributeResponse
@@ -177,7 +177,8 @@ class ScpiServer:  # pylint: disable=too-few-public-methods
                     field, b"1" if attribute_value else b"0"
                 )
             elif attribute_type == "sized_array":
-                data = struct.pack("f" * len(attribute_value), *attribute_value)
+                dtype = getattr(np, definition["array_type"])
+                data = np.fromiter(attribute_value, dtype=dtype).tobytes()
                 value_bytes = f"#{len(str(len(data)))}{len(data)}".encode() + data
                 scpi_response.add_query_response(field, value_bytes)
             else:

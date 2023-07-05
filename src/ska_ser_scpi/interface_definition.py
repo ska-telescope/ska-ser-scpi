@@ -9,7 +9,7 @@ from typing import TypedDict
 
 from typing_extensions import NotRequired
 
-SupportedAttributeType = bool | float | int | str
+SupportedAttributeType = bool | float | int | str | list[float | int]
 
 
 class AttributeDefinitionType(TypedDict):

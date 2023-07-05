@@ -64,15 +64,15 @@ class AttributeClient:  # pylint: disable=too-few-public-methods
                             {bit: attribute}
                         )
                     else:
-                        field_info = {
+                        field_info: _FieldDefinitionType = {
                             "field_type": attribute_type,
                             "attribute": attribute,
                         }
                         if attribute_type == "sized_array":
                             field_info["array_type"] = definition[method]["array_type"]
-                        self._field_map[field].update({f"{method}": field_info})
+                        self._field_map[field][method] = field_info
                 else:
-                    self._field_map[field] = {f"{method}": {"attribute": attribute}}
+                    self._field_map[field] = {method: {"attribute": attribute}}
 
     def send_receive(self, attribute_request: AttributeRequest) -> AttributeResponse:
         """
@@ -143,6 +143,8 @@ class AttributeClient:  # pylint: disable=too-few-public-methods
         :param scpi_response: the SCPI response object to be
             unmarshalled.
 
+        :raises ValueError: if response data is invalid
+
         :returns: an attribute response object.
         """
         attribute_response = AttributeResponse()
@@ -166,7 +168,7 @@ class AttributeClient:  # pylint: disable=too-few-public-methods
                     value = int(field_value)
                 elif field_type == "sized_array":
                     if field_value[:1] != b"#":
-                        raise AssertionError(
+                        raise ValueError(
                             f"Malformed value for sized_array field {field} "
                             f"does not start with '#'"
                         )
@@ -174,19 +176,18 @@ class AttributeClient:  # pylint: disable=too-few-public-methods
                     num_bytes = int(field_value[2 : 2 + num_digits])
                     data_bytes = field_value[2 + num_digits :]
                     if len(data_bytes) != num_bytes:
-                        raise AssertionError(
+                        raise ValueError(
                             f"Received {len(data_bytes)} bytes, "
                             f"expected {num_bytes} for sized_array field {field}"
                         )
-                    value = list(
-                        np.frombuffer(data_bytes, getattr(np, definition["array_type"]))
-                    )
-                elif field_type == "str":
-                    value = field_value.decode("utf-8")
+                    dtype = getattr(np, definition["array_type"])
+                    # Return a list because attribute values are used in equality
+                    # comparisons for if conditions in various places. np.ndarray
+                    # breaks that by overriding == to return an element-wise array
+                    # which raises ValueError when coerced to bool.
+                    value = list(np.frombuffer(data_bytes, dtype=dtype))
                 else:
-                    raise ValueError(
-                        f"Unknown field type '{field_type}' for attribute '{field}'"
-                    )
+                    value = field_value.decode("utf-8")
                 attribute_response.add_query_response(attribute, value)
 
         return attribute_response
