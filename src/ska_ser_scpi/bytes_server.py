@@ -71,6 +71,5 @@ class ScpiBytesServer:  # pylint: disable=too-few-public-methods
 
         :returns: a bytestring.
         """
-        response_str = ";".join(scpi_response.responses.values())
-        response_bytes = response_str.encode(self._encoding)
+        response_bytes = b";".join(scpi_response.responses.values())
         return response_bytes

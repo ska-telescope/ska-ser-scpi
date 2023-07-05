@@ -1,6 +1,7 @@
 """This module provides an attribute client."""
 from typing import TypedDict
 
+import numpy as np
 from typing_extensions import NotRequired
 
 from .attribute_payload import AttributeRequest, AttributeResponse
@@ -15,6 +16,7 @@ class _FieldDefinitionType(TypedDict):
     # "attributes" required iff field_type == "bits",
     # "attribute" not allowed if field_type == "bits"
     field_type: NotRequired[str]
+    array_type: NotRequired[str]
     attribute: NotRequired[str]
     attributes: NotRequired[dict[int, str]]
 
@@ -62,14 +64,13 @@ class AttributeClient:  # pylint: disable=too-few-public-methods
                             {bit: attribute}
                         )
                     else:
-                        self._field_map[field].update(
-                            {
-                                f"{method}": {
-                                    "field_type": attribute_type,
-                                    "attribute": attribute,
-                                }
-                            }
-                        )
+                        field_info = {
+                            "field_type": attribute_type,
+                            "attribute": attribute,
+                        }
+                        if attribute_type == "sized_array":
+                            field_info["array_type"] = definition[method]["array_type"]
+                        self._field_map[field].update({f"{method}": field_info})
                 else:
                     self._field_map[field] = {f"{method}": {"attribute": attribute}}
 
@@ -158,13 +159,34 @@ class AttributeClient:  # pylint: disable=too-few-public-methods
             else:
                 attribute = definition["attribute"]
                 if field_type == "bool":
-                    value = field_value == "1"
+                    value = field_value == b"1"
                 elif field_type == "float":
                     value = float(field_value)
                 elif field_type == "int":
                     value = int(field_value)
+                elif field_type == "sized_array":
+                    if field_value[:1] != b"#":
+                        raise AssertionError(
+                            f"Malformed value for sized_array field {field} "
+                            f"does not start with '#'"
+                        )
+                    num_digits = int(field_value[1:2])
+                    num_bytes = int(field_value[2 : 2 + num_digits])
+                    data_bytes = field_value[2 + num_digits :]
+                    if len(data_bytes) != num_bytes:
+                        raise AssertionError(
+                            f"Received {len(data_bytes)} bytes, "
+                            f"expected {num_bytes} for sized_array field {field}"
+                        )
+                    value = list(
+                        np.frombuffer(data_bytes, getattr(np, definition["array_type"]))
+                    )
+                elif field_type == "str":
+                    value = field_value.decode("utf-8")
                 else:
-                    value = field_value
+                    raise ValueError(
+                        f"Unknown field type '{field_type}' for attribute '{field}'"
+                    )
                 attribute_response.add_query_response(attribute, value)
 
         return attribute_response

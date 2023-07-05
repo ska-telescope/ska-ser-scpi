@@ -17,6 +17,7 @@ class AttributeDefinitionType(TypedDict):
 
     field: str
     field_type: str
+    array_type: NotRequired[str]
     min_value: NotRequired[float]
     max_value: NotRequired[float]
     absolute_resolution: NotRequired[float]
