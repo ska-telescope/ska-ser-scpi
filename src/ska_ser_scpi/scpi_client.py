@@ -147,7 +147,10 @@ class ScpiClient:  # pylint: disable=too-few-public-methods
         for response_bytes in responses:
             response_bytes = response_bytes.strip()
             if response_bytes:
-                values.extend(self._response_regex.findall(response_bytes))
+                if self._chain:
+                    values.extend(self._response_regex.findall(response_bytes))
+                else:
+                    values.append(response_bytes)
 
         if len(values) != len(fields):
             raise ValueError(
