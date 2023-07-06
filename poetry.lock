@@ -981,19 +981,20 @@ files = [
 
 [[package]]
 name = "ska-ser-devices"
-version = "0.1.0"
+version = "0.1.1"
 description = "A library package for communicating with hardware through standard interfaces (e.g. MODBUS, SCPI, SNMP)."
 category = "main"
 optional = false
-python-versions = "^3.10"
-files = []
-develop = false
+python-versions = ">=3.10,<4.0"
+files = [
+    {file = "ska_ser_devices-0.1.1-py3-none-any.whl", hash = "sha256:a0a3b8e24281d9789da48a190c0527557fb8cfc162bc7a885922cdb2eccae2a9"},
+    {file = "ska_ser_devices-0.1.1.tar.gz", hash = "sha256:15814469e255679d1cfd0f500de8cd8a1037dbe42a57e1b18419c933a3d48799"},
+]
 
 [package.source]
-type = "git"
-url = "https://gitlab.com/ska-telescope/ska-ser-devices.git"
-reference = "3382717c2cbb9a3626d749ba2b8e0f1160a7a6c6"
-resolved_reference = "3382717c2cbb9a3626d749ba2b8e0f1160a7a6c6"
+type = "legacy"
+url = "https://artefact.skao.int/repository/pypi-internal/simple"
+reference = 'skao'
 
 [[package]]
 name = "snowballstemmer"
@@ -1346,4 +1347,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "31d585fc255007279b663a58d0793df0c8bcfea95c82eab730fdf9688811e333"
+content-hash = "b6edee4e9275a2960a103566c13a5686501bc9a5a7eb8846b3246e1a227c988e"
