@@ -37,6 +37,7 @@ sphinx-rtd-theme = "^1.0"
 sphinx-autodoc-typehints = "^1.19"
 ska-ser-devices = "^0.1.1"
 typing-extensions = "^4.5.0"
+numpy = "^1.23"
 
 [tool.pytest.ini_options]
 addopts = "-v"
