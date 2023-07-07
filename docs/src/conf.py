@@ -10,7 +10,7 @@ def setup(app):
 project = 'ska-ser-scpi'
 copyright = '2023, SKAO'
 author = 'SKAO'
-release = '0.3.0'
+release = '0.3.1'
 
 extensions = [
     "sphinx.ext.autodoc",
