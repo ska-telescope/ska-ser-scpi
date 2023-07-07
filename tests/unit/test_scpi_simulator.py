@@ -253,14 +253,10 @@ def test_simulator_queries(
     attribute_response = attribute_client.send_receive(attribute_request)
 
     for key, value in expected_values.items():
-        if isinstance(value, np.ndarray):
-            got = attribute_response.responses[key]
-            assert ((got == value) | (np.isnan(got) & np.isnan(value))).all()
-        else:
-            assert attribute_response.responses[key] == value, (
-                f"Expected key {key} to have value {value}, but it has value "
-                f"{attribute_response.responses[key]}."
-            )
+        assert attribute_response.responses[key] == value, (
+            f"Expected key {key} to have value {value}, but it has value "
+            f"{attribute_response.responses[key]}."
+        )
 
 
 __numpy_types = [
