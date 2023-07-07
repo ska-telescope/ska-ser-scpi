@@ -2,6 +2,10 @@
 
 ## unreleased
 
+## 0.3.1
+
+* [MCCS-1622] Update to new ska-ser-devices version with transport layer logging
+
 ## 0.3.0
 
 * [LOW-478] Support int type attributes
