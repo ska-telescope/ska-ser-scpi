@@ -1,6 +1,7 @@
 """This module provides a protocol for SCPI bytes clients."""
 from __future__ import annotations
 
+import logging
 from typing import Literal
 
 from ska_ser_devices.client_server import (
@@ -32,6 +33,7 @@ class ScpiBytesClientFactory:
         port: int,
         timeout: float,
         sentinel_string: str = "\r\n",
+        logger: logging.Logger | None = None,
     ) -> ApplicationClient[bytes, bytes]:
         """
         Create and return a client for a given protocol and address.
@@ -42,12 +44,13 @@ class ScpiBytesClientFactory:
         :param timeout: how long to wait during blocking operations.
         :param sentinel_string: sentinel string indicating the end of a
             payload.
+        :param logger: a python standard logger
 
         :returns: a client that can use the given protocol and address to
             send/receive bytes to/from a server.
         """
-        bytes_client = self._clients[protocol](str(host), port, timeout)
-        marshaller = SentinelBytesMarshaller(sentinel_string.encode())
+        bytes_client = self._clients[protocol](str(host), port, timeout, logger=logger)
+        marshaller = SentinelBytesMarshaller(sentinel_string.encode(), logger=logger)
 
         return ApplicationClient[bytes, bytes](
             bytes_client, marshaller.marshall, marshaller.unmarshall

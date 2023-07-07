@@ -5,6 +5,7 @@ It is also intended to stress-test the marshalling / unmarshalling
 functionality.
 """
 
+import logging
 import random
 import threading
 from contextlib import contextmanager
@@ -141,6 +142,7 @@ def simulator_server_fixture(
 def attribute_client_fixture(
     simulator_server: TcpServer,
     interface_definition: InterfaceDefinitionType,
+    logger: logging.Logger,
 ) -> AttributeClient:
     """
     Return an attribute client that sends to/receives from the simulator.
@@ -149,11 +151,14 @@ def attribute_client_fixture(
         client will send attribute requests to,
         and receive attribute responses from.
     :param interface_definition: definition of the simulator interface.
+    :param logger: a python standard logger
 
     :returns: an attribute client.
     """
     host, port = simulator_server.server_address
-    bytes_client = ScpiBytesClientFactory().create_client("tcp", host, port, 3.0)
+    bytes_client = ScpiBytesClientFactory().create_client(
+        "tcp", host, port, 3.0, logger=logger
+    )
     scpi_client = ScpiClient(
         bytes_client, return_response=interface_definition["return_response"]
     )
