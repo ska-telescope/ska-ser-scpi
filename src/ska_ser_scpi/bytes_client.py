@@ -2,7 +2,8 @@
 from __future__ import annotations
 
 import logging
-from typing import Literal
+import re
+from typing import Iterator, Literal
 
 from ska_ser_devices.client_server import (
     ApplicationClient,
@@ -12,6 +13,39 @@ from ska_ser_devices.client_server import (
 )
 
 SupportedProtocol = Literal["tcp", "telnet"]
+
+
+class _JimmiedSentinelBytesMarshaller(SentinelBytesMarshaller):
+    def unmarshall(self, bytes_iterator: Iterator[bytes]) -> bytes:
+        """
+        Unmarshall bytes with awareness of IEEE 488.2 arbitrary blocks.
+
+        These blocks start with a length header, and then contain arbitrary
+        byte data, as the name suggests. That means that the blocks can
+        contain our sentinel string, and be split in half when they shouldn't
+        be! We need to watch for the beginning of these blocks, and then
+        keep reading from the stream, ignoring the sentinel, until we have
+        as much data as we expect.
+
+        Note this will only work when chaining is disabled, because we only
+        look for the arbitrary block header at the start of each chunk.
+
+        :param bytes_iterator: an iterator of bytestrings received
+            by the server
+
+        :return: the application-layer bytestring, minus the terminator.
+        """
+        payload = next(bytes_iterator)
+        if re.match(rb"^#\d\d+", payload):
+            len_head = 2 + int(payload[1:2])
+            len_data = int(payload[2:len_head])
+            len_expected = len_head + len_data + len(self._sentinel)
+            while not payload.endswith(self._sentinel) or len(payload) != len_expected:
+                payload = payload + next(bytes_iterator)
+        else:
+            while not payload.endswith(self._sentinel):
+                payload = payload + next(bytes_iterator)
+        return payload.removesuffix(self._sentinel)
 
 
 # pylint: disable-next=too-few-public-methods
@@ -50,7 +84,9 @@ class ScpiBytesClientFactory:
             send/receive bytes to/from a server.
         """
         bytes_client = self._clients[protocol](str(host), port, timeout, logger=logger)
-        marshaller = SentinelBytesMarshaller(sentinel_string.encode(), logger=logger)
+        marshaller = _JimmiedSentinelBytesMarshaller(
+            sentinel_string.encode(), logger=logger
+        )
 
         return ApplicationClient[bytes, bytes](
             bytes_client, marshaller.marshall, marshaller.unmarshall

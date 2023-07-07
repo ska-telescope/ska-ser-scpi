@@ -145,7 +145,6 @@ class ScpiClient:  # pylint: disable=too-few-public-methods
         scpi_response = ScpiResponse()
         values: list[bytes] = []
         for response_bytes in responses:
-            response_bytes = response_bytes.strip()
             if response_bytes:
                 if self._chain:
                     values.extend(self._response_regex.findall(response_bytes))
