@@ -5,11 +5,12 @@ Interfaces definitions are primarily mappings from instrument-
 independent attributes like "frequency" to instrument-specific SCPI
 fields like "FREQ".
 """
-from typing import TypedDict
+from typing import Any, TypedDict
 
+import numpy as np
 from typing_extensions import NotRequired
 
-SupportedAttributeType = bool | float | int | str | list[float | int]
+SupportedAttributeType = bool | float | int | str | list[float | int | np.number[Any]]
 
 
 class AttributeDefinitionType(TypedDict):
