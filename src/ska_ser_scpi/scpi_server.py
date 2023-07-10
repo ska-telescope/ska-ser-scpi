@@ -176,8 +176,8 @@ class ScpiServer:  # pylint: disable=too-few-public-methods
                 scpi_response.add_query_response(
                     field, b"1" if attribute_value else b"0"
                 )
-            elif attribute_type == "sized_array":
-                dtype = getattr(np, definition["array_type"])
+            elif attribute_type == "arbitrary_block":
+                dtype = getattr(np, definition["block_data_type"])
                 data = np.fromiter(attribute_value, dtype=dtype).tobytes()
                 value_bytes = f"#{len(str(len(data)))}{len(data)}".encode() + data
                 scpi_response.add_query_response(field, value_bytes)

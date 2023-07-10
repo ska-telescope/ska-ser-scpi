@@ -58,11 +58,11 @@ def interface_definition_fixture() -> InterfaceDefinitionType:
                 "bit": (i - 1) % 100,
             }
         }
-        definition[f"sized_array{i}"] = {
+        definition[f"arbitrary_block{i}"] = {
             "read": {
                 "field": f"ARRAY{i}",
-                "field_type": "sized_array",
-                "array_type": random.choice(__numpy_types),
+                "field_type": "arbitrary_block",
+                "block_data_type": random.choice(__numpy_types),
             }
         }
     interface_definition: InterfaceDefinitionType = {
@@ -101,9 +101,9 @@ def initial_values_fixture(
         values[f"boolean{i}"] = i % 2 == 0
         values[f"int{i}"] = i * 2
         values[f"bit{i}"] = i % 2 == 0
-        attr_def = interface_definition["attributes"][f"sized_array{i}"]["read"]
-        dtype = getattr(np, attr_def["array_type"])
-        values[f"sized_array{i}"] = list(
+        attr_def = interface_definition["attributes"][f"arbitrary_block{i}"]["read"]
+        dtype = getattr(np, attr_def["block_data_type"])
+        values[f"arbitrary_block{i}"] = list(
             np.nan_to_num(np.frombuffer(np.random.bytes(8096), dtype=dtype))
         )
     return values

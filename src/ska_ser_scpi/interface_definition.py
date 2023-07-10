@@ -18,8 +18,8 @@ class AttributeDefinitionType(TypedDict):
 
     field: str
     field_type: str
-    array_type: NotRequired[str]
-    array_max_size: NotRequired[int]
+    block_data_type: NotRequired[str]
+    max_dim_x: NotRequired[int]
     min_value: NotRequired[float]
     max_value: NotRequired[float]
     absolute_resolution: NotRequired[float]

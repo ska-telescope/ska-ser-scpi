@@ -16,7 +16,7 @@ class _FieldDefinitionType(TypedDict):
     # "attributes" required iff field_type == "bits",
     # "attribute" not allowed if field_type == "bits"
     field_type: NotRequired[str]
-    array_type: NotRequired[str]
+    block_data_type: NotRequired[str]
     attribute: NotRequired[str]
     attributes: NotRequired[dict[int, str]]
 
@@ -68,8 +68,10 @@ class AttributeClient:  # pylint: disable=too-few-public-methods
                             "field_type": attribute_type,
                             "attribute": attribute,
                         }
-                        if attribute_type == "sized_array":
-                            field_info["array_type"] = definition[method]["array_type"]
+                        if attribute_type == "arbitrary_block":
+                            field_info["block_data_type"] = definition[method][
+                                "block_data_type"
+                            ]
                         self._field_map[field][method] = field_info
                 else:
                     self._field_map[field] = {method: {"attribute": attribute}}
@@ -166,10 +168,10 @@ class AttributeClient:  # pylint: disable=too-few-public-methods
                     value = float(field_value)
                 elif field_type == "int":
                     value = int(field_value)
-                elif field_type == "sized_array":
+                elif field_type == "arbitrary_block":
                     if field_value[:1] != b"#":
                         raise ValueError(
-                            f"Malformed value for sized_array field {field} "
+                            f"Malformed value for arbitrary_block field {field} "
                             f"does not start with '#'"
                         )
                     num_digits = int(field_value[1:2])
@@ -178,9 +180,9 @@ class AttributeClient:  # pylint: disable=too-few-public-methods
                     if len(data_bytes) != num_bytes:
                         raise ValueError(
                             f"Received {len(data_bytes)} bytes, "
-                            f"expected {num_bytes} for sized_array field {field}"
+                            f"expected {num_bytes} for arbitrary_block field {field}"
                         )
-                    dtype = getattr(np, definition["array_type"])
+                    dtype = getattr(np, definition["block_data_type"])
                     # Return a list because attribute values are used in equality
                     # comparisons for if conditions in various places. np.ndarray
                     # breaks that by overriding == to return an element-wise array
