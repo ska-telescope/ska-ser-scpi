@@ -37,3 +37,7 @@ intersphinx_mapping = {
     "https://docs.python.org/3.10/": None,
     "https://developer.skao.int/projects/ska-ser-devices/en/latest/": None,
 }
+
+nitpick_ignore = [
+    ('py:class', 'numpy.number'),
+]
