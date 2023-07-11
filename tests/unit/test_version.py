@@ -4,4 +4,4 @@ import ska_ser_scpi
 
 def test_version() -> None:
     """Test that the package version is as expected."""
-    assert ska_ser_scpi.__version__ == "0.3.1"
+    assert ska_ser_scpi.__version__ == "0.4.0"
