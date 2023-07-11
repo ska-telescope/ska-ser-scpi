@@ -33,6 +33,9 @@ class _JimmiedSentinelBytesMarshaller(SentinelBytesMarshaller):
         :param bytes_iterator: an iterator of bytestrings received
             by the server
 
+        :raises ValueError: when an arbitrary-block-looking payload
+            is received that is longer than its header indicates
+
         :return: the application-layer bytestring, minus the terminator.
         """
         payload = next(bytes_iterator)
@@ -40,8 +43,14 @@ class _JimmiedSentinelBytesMarshaller(SentinelBytesMarshaller):
             len_head = 2 + int(payload[1:2])
             len_data = int(payload[2:len_head])
             len_expected = len_head + len_data + len(self._sentinel)
-            while not payload.endswith(self._sentinel) or len(payload) != len_expected:
+            while len(payload) < len_expected or not payload.endswith(self._sentinel):
                 payload = payload + next(bytes_iterator)
+            if len(payload) > len_expected:
+                len_received = len(payload) - len_head - len(self._sentinel)
+                raise ValueError(
+                    "Malformed IEEE 488.2 Definite Length Arbitrary Block Data: "
+                    f"received {len_received} bytes but header stated {len_data} bytes"
+                )
         else:
             while not payload.endswith(self._sentinel):
                 payload = payload + next(bytes_iterator)

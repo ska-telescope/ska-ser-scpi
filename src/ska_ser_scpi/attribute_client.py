@@ -169,18 +169,19 @@ class AttributeClient:  # pylint: disable=too-few-public-methods
                 elif field_type == "int":
                     value = int(field_value)
                 elif field_type == "arbitrary_block":
-                    if field_value[:1] != b"#":
+                    if not field_value.startswith(b"#"):
                         raise ValueError(
                             f"Malformed value for arbitrary_block field {field} "
                             f"does not start with '#'"
                         )
-                    num_digits = int(field_value[1:2])
-                    num_bytes = int(field_value[2 : 2 + num_digits])
-                    data_bytes = field_value[2 + num_digits :]
-                    if len(data_bytes) != num_bytes:
+                    # an index into bytes returns an int, not bytes, so we must slice
+                    len_head = 2 + int(field_value[1:2])
+                    len_data = int(field_value[2:len_head])
+                    data_bytes = field_value[len_head:]
+                    if len(data_bytes) != len_data:
                         raise ValueError(
                             f"Received {len(data_bytes)} bytes, "
-                            f"expected {num_bytes} for arbitrary_block field {field}"
+                            f"expected {len_data} for arbitrary_block field {field}"
                         )
                     dtype = getattr(np, definition["block_data_type"])
                     # Return a list because attribute values are used in equality
