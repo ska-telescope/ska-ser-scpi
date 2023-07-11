@@ -57,7 +57,7 @@ class ScpiClient:  # pylint: disable=too-few-public-methods
         # a comma-separate list of error code, error string pairs, and
         # the error string always contains semicolons. Even csv doesn't
         # help us here!
-        self._response_regex = re.compile(r'(?:[^;"]|"[^"]+?")+')
+        self._response_regex = re.compile(rb'(?:[^;"]|"[^"]+?")+')
 
     def send_receive(self, scpi_request: ScpiRequest) -> ScpiResponse:
         """
@@ -143,11 +143,13 @@ class ScpiClient:  # pylint: disable=too-few-public-methods
             fields.
         """
         scpi_response = ScpiResponse()
-        values: list[str] = []
+        values: list[bytes] = []
         for response_bytes in responses:
-            response_str = response_bytes.decode(self._encoding).strip()
-            if response_str:
-                values.extend(self._response_regex.findall(response_str))
+            if response_bytes:
+                if self._chain:
+                    values.extend(self._response_regex.findall(response_bytes))
+                else:
+                    values.append(response_bytes)
 
         if len(values) != len(fields):
             raise ValueError(

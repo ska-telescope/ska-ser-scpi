@@ -102,9 +102,9 @@ class ScpiResponse:
 
     def __init__(self) -> None:
         """Initialise a new instance."""
-        self._responses: dict[str, str] = {}
+        self._responses: dict[str, bytes] = {}
 
-    def add_query_response(self, field: str, value: str) -> None:
+    def add_query_response(self, field: str, value: bytes) -> None:
         """
         Add a response to a SCPI field value query.
 
@@ -114,7 +114,7 @@ class ScpiResponse:
         self._responses[field] = value
 
     @property
-    def responses(self) -> dict[str, str]:
+    def responses(self) -> dict[str, bytes]:
         """
         Return responses to queries in a SCPI request.
 

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from typing import TypedDict
 
+import numpy as np
 from typing_extensions import NotRequired
 
 from .attribute_payload import AttributeRequest, AttributeResponse
@@ -165,15 +166,22 @@ class ScpiServer:  # pylint: disable=too-few-public-methods
             attribute_value = attribute_response.responses[attribute]
 
             if attribute_type == "bit":
-                field_value = scpi_response.responses.get(field, "0")
+                field_value = scpi_response.responses.get(field, b"0")
                 if attribute_value:
                     bit = definition["bit"]
                     bitmask = 1 << bit
-                    field_value = str(int(field_value) | bitmask)
+                    field_value = str(int(field_value) | bitmask).encode()
                 scpi_response.add_query_response(field, field_value)
             elif attribute_type == "bool":
-                scpi_response.add_query_response(field, "1" if attribute_value else "0")
+                scpi_response.add_query_response(
+                    field, b"1" if attribute_value else b"0"
+                )
+            elif attribute_type == "arbitrary_block":
+                dtype = getattr(np, definition["block_data_type"])
+                data = np.fromiter(attribute_value, dtype=dtype).tobytes()
+                value_bytes = f"#{len(str(len(data)))}{len(data)}".encode() + data
+                scpi_response.add_query_response(field, value_bytes)
             else:
-                scpi_response.add_query_response(field, str(attribute_value))
+                scpi_response.add_query_response(field, str(attribute_value).encode())
 
         return scpi_response

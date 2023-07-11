@@ -1,6 +1,7 @@
 """This module provides an attribute client."""
 from typing import TypedDict
 
+import numpy as np
 from typing_extensions import NotRequired
 
 from .attribute_payload import AttributeRequest, AttributeResponse
@@ -15,6 +16,7 @@ class _FieldDefinitionType(TypedDict):
     # "attributes" required iff field_type == "bits",
     # "attribute" not allowed if field_type == "bits"
     field_type: NotRequired[str]
+    block_data_type: NotRequired[str]
     attribute: NotRequired[str]
     attributes: NotRequired[dict[int, str]]
 
@@ -62,16 +64,17 @@ class AttributeClient:  # pylint: disable=too-few-public-methods
                             {bit: attribute}
                         )
                     else:
-                        self._field_map[field].update(
-                            {
-                                f"{method}": {
-                                    "field_type": attribute_type,
-                                    "attribute": attribute,
-                                }
-                            }
-                        )
+                        field_info: _FieldDefinitionType = {
+                            "field_type": attribute_type,
+                            "attribute": attribute,
+                        }
+                        if attribute_type == "arbitrary_block":
+                            field_info["block_data_type"] = definition[method][
+                                "block_data_type"
+                            ]
+                        self._field_map[field][method] = field_info
                 else:
-                    self._field_map[field] = {f"{method}": {"attribute": attribute}}
+                    self._field_map[field] = {method: {"attribute": attribute}}
 
     def send_receive(self, attribute_request: AttributeRequest) -> AttributeResponse:
         """
@@ -142,6 +145,8 @@ class AttributeClient:  # pylint: disable=too-few-public-methods
         :param scpi_response: the SCPI response object to be
             unmarshalled.
 
+        :raises ValueError: if response data is invalid
+
         :returns: an attribute response object.
         """
         attribute_response = AttributeResponse()
@@ -158,13 +163,34 @@ class AttributeClient:  # pylint: disable=too-few-public-methods
             else:
                 attribute = definition["attribute"]
                 if field_type == "bool":
-                    value = field_value == "1"
+                    value = field_value == b"1"
                 elif field_type == "float":
                     value = float(field_value)
                 elif field_type == "int":
                     value = int(field_value)
+                elif field_type == "arbitrary_block":
+                    if not field_value.startswith(b"#"):
+                        raise ValueError(
+                            f"Malformed value for arbitrary_block field {field} "
+                            f"does not start with '#'"
+                        )
+                    # an index into bytes returns an int, not bytes, so we must slice
+                    len_head = 2 + int(field_value[1:2])
+                    len_data = int(field_value[2:len_head])
+                    data_bytes = field_value[len_head:]
+                    if len(data_bytes) != len_data:
+                        raise ValueError(
+                            f"Received {len(data_bytes)} bytes, "
+                            f"expected {len_data} for arbitrary_block field {field}"
+                        )
+                    dtype = getattr(np, definition["block_data_type"])
+                    # Return a list because attribute values are used in equality
+                    # comparisons for if conditions in various places. np.ndarray
+                    # breaks that by overriding == to return an element-wise array
+                    # which raises ValueError when coerced to bool.
+                    value = list(np.frombuffer(data_bytes, dtype=dtype))
                 else:
-                    value = field_value
+                    value = field_value.decode("utf-8")
                 attribute_response.add_query_response(attribute, value)
 
         return attribute_response

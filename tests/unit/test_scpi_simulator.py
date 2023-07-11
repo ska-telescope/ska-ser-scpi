@@ -11,6 +11,7 @@ import threading
 from contextlib import contextmanager
 from typing import Any, Iterator
 
+import numpy as np
 import pytest
 from ska_ser_devices.client_server import TcpServer
 
@@ -57,13 +58,20 @@ def interface_definition_fixture() -> InterfaceDefinitionType:
                 "bit": (i - 1) % 100,
             }
         }
+        definition[f"arbitrary_block{i}"] = {
+            "read": {
+                "field": f"ARRAY{i}",
+                "field_type": "arbitrary_block",
+                "block_data_type": random.choice(__numpy_types),
+            }
+        }
     interface_definition: InterfaceDefinitionType = {
         "model": "TEST",
-        "supports_chains": True,
+        "supports_chains": False,
         "poll_rate": 0.1,
-        "timeout": 0.5,
+        "timeout": 3.0,
         "attributes": definition,
-        "sentinel_string": "\r\n",
+        "sentinel_string": "\n",
         "argument_separator": " ",
         "return_response": False,
     }
@@ -73,9 +81,14 @@ def interface_definition_fixture() -> InterfaceDefinitionType:
 
 
 @pytest.fixture(name="initial_values")
-def initial_values_fixture() -> dict[str, SupportedAttributeType]:
+def initial_values_fixture(
+    interface_definition: InterfaceDefinitionType,
+) -> dict[str, SupportedAttributeType]:
     """
     Return the simulator's initial values.
+
+    :param interface_definition: definition of the simulator's SCPI
+        interface.
 
     :returns: the simulator's initial values.
     """
@@ -88,6 +101,11 @@ def initial_values_fixture() -> dict[str, SupportedAttributeType]:
         values[f"boolean{i}"] = i % 2 == 0
         values[f"int{i}"] = i * 2
         values[f"bit{i}"] = i % 2 == 0
+        attr_def = interface_definition["attributes"][f"arbitrary_block{i}"]["read"]
+        dtype = getattr(np, attr_def["block_data_type"])
+        values[f"arbitrary_block{i}"] = list(
+            np.nan_to_num(np.frombuffer(np.random.bytes(8096), dtype=dtype))
+        )
     return values
 
 
@@ -157,10 +175,17 @@ def attribute_client_fixture(
     """
     host, port = simulator_server.server_address
     bytes_client = ScpiBytesClientFactory().create_client(
-        "tcp", host, port, 3.0, logger=logger
+        "tcp",
+        host,
+        port,
+        timeout=interface_definition["timeout"],
+        sentinel_string=interface_definition["sentinel_string"],
+        logger=logger,
     )
     scpi_client = ScpiClient(
-        bytes_client, return_response=interface_definition["return_response"]
+        bytes_client,
+        chain=interface_definition["supports_chains"],
+        return_response=interface_definition["return_response"],
     )
     attribute_client = AttributeClient(scpi_client, interface_definition["attributes"])
     return attribute_client
@@ -232,3 +257,16 @@ def test_simulator_queries(
             f"Expected key {key} to have value {value}, but it has value "
             f"{attribute_response.responses[key]}."
         )
+
+
+__numpy_types = [
+    "float16",
+    "float32",
+    "float64",
+    "int16",
+    "int32",
+    "int64",
+    "uint16",
+    "uint32",
+    "uint64",
+]

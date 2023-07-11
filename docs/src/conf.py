@@ -34,6 +34,14 @@ html_context = {
 # ]
 
 intersphinx_mapping = {
-    "https://docs.python.org/3.10/": None,
-    "https://developer.skao.int/projects/ska-ser-devices/en/latest/": None,
+    "python": ("https://docs.python.org/3.10/", None),
+    "ska-ser-devices": (
+        "https://developer.skao.int/projects/ska-ser-devices/en/0.1.1/",
+        None,
+    ),
+    "numpy": ("https://numpy.org/doc/stable/", None),
 }
+
+nitpick_ignore = [
+    ('py:class', 'numpy.number'),
+]
