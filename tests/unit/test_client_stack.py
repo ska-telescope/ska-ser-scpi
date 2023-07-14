@@ -40,6 +40,38 @@ def interface_definition_fixture() -> InterfaceDefinitionType:
             "chilled": {
                 "read_write": {"field": "FLAGS", "field_type": "bit", "bit": 7}
             },
+            "boiled": {
+                "read": {
+                    "field": "PROCESS",
+                    "field_type": "packet_item",
+                    "packet_item": 0,
+                },
+                "write": {"field": "BOIL", "field_type": "float"},
+            },
+            "fried": {
+                "read": {
+                    "field": "PROCESS",
+                    "field_type": "packet_item",
+                    "packet_item": 1,
+                },
+                "write": {"field": "FRY", "field_type": "float"},
+            },
+            "dried": {
+                "read": {
+                    "field": "PROCESS",
+                    "field_type": "packet_item",
+                    "packet_item": 2,
+                },
+                "write": {"field": "DRY", "field_type": "float"},
+            },
+            "fermented": {
+                "read": {
+                    "field": "PROCESS",
+                    "field_type": "packet_item",
+                    "packet_item": 3,
+                },
+                "write": {"field": "FERMENT", "field_type": "float"},
+            },
         },
         "sentinel_string": "\r\n",
         "argument_separator": " ",
@@ -59,7 +91,17 @@ def attribute_request_fixture() -> AttributeRequest:
     """
     attribute_request = AttributeRequest()
     attribute_request.set_queries(
-        "name", "juiciness", "rotten", "peeled", "overripe", "under-ripe"
+        "name",
+        "juiciness",
+        "rotten",
+        "peeled",
+        "overripe",
+        "under-ripe",
+        "chilled",
+        "boiled",
+        "fried",
+        "dried",
+        "fermented",
     )
     attribute_request.add_setop("peeled", True)
     attribute_request.add_setop("chilled", True)
@@ -81,6 +123,10 @@ def expected_attribute_response_fixture() -> AttributeResponse:
     attribute_response.add_query_response("overripe", False)
     attribute_response.add_query_response("under-ripe", True)
     attribute_response.add_query_response("chilled", True)
+    attribute_response.add_query_response("boiled", 0.1)
+    attribute_response.add_query_response("fried", 0.2)
+    attribute_response.add_query_response("dried", 0.3)
+    attribute_response.add_query_response("fermented", 0.4)
     return attribute_response
 
 
@@ -91,7 +137,7 @@ def expected_bytes_call_fixture() -> bytes:
 
     :returns: the expected bytes call.
     """
-    return b"NAME?;JUIC?;ROTT?;PEEL?;FLAGS?"
+    return b"NAME?;JUIC?;ROTT?;PEEL?;FLAGS?;PROCESS?"
 
 
 @pytest.fixture(name="mock_bytes_client")
@@ -102,7 +148,7 @@ def mock_bytes_client_fixture() -> unittest.mock.Mock:
     :returns: a mock attribute server.
     """
     mock_bytes_client = unittest.mock.Mock()
-    mock_bytes_client.return_value = b"orange;98.7;30;1;130"
+    mock_bytes_client.return_value = b"orange;98.7;30;1;130;0.1 0.2 0.3 0.4"
     return mock_bytes_client
 
 
