@@ -55,8 +55,8 @@ class ScpiServer:  # pylint: disable=too-few-public-methods
                     self._field_map[field] = {}
                 if "field_type" in definition[method]:
                     attribute_type = definition[method]["field_type"]
-                    if attribute_type == "bit" or attribute_type == "packet_item":
-                        idx = definition[method][attribute_type]
+                    if attribute_type in ("bit", "packet_item"):
+                        idx = definition[method][attribute_type]  # type: ignore
                         if method not in self._field_map[field]:
                             self._field_map[field][method] = {
                                 "field_type": attribute_type,
@@ -66,17 +66,16 @@ class ScpiServer:  # pylint: disable=too-few-public-methods
                             {idx: attribute}
                         )
                     else:
-                        field_info: _FieldDefinitionType = {
-                            "field_type": attribute_type,
-                            "attribute": attribute,
-                        }
-                        if attribute_type == "arbitrary_block":
-                            field_info["block_data_type"] = definition[method][
-                                "block_data_type"
-                            ]
-                        self._field_map[field][method] = field_info
+                        self._field_map[field].update(
+                            {
+                                f"{method}": {
+                                    "field_type": attribute_type,
+                                    "attribute": attribute,
+                                }
+                            }
+                        )
                 else:
-                    self._field_map[field] = {method: {"attribute": attribute}}
+                    self._field_map[field] = {f"{method}": {"attribute": attribute}}
 
     def receive_send(self, scpi_request: ScpiRequest) -> ScpiResponse:
         """

@@ -1,6 +1,7 @@
 """This module provides an attribute client."""
-from typing import TypedDict
 import re
+from typing import TypedDict
+
 import numpy as np
 from typing_extensions import NotRequired
 
@@ -53,8 +54,8 @@ class AttributeClient:  # pylint: disable=too-few-public-methods
                     self._field_map[field] = {}
                 if "field_type" in definition[method]:
                     attribute_type = definition[method]["field_type"]
-                    if attribute_type == "bit" or attribute_type == "packet_item":
-                        idx = definition[method][attribute_type]
+                    if attribute_type in ("bit", "packet_item"):
+                        idx = definition[method][attribute_type]  # type: ignore
                         if method not in self._field_map[field]:
                             self._field_map[field][method] = {
                                 "field_type": attribute_type,
@@ -135,7 +136,8 @@ class AttributeClient:  # pylint: disable=too-few-public-methods
 
         return scpi_request
 
-    def _unmarshall_response(
+    # pylint: disable-next=too-many-locals, too-many-branches
+    def _unmarshall_response(  # noqa: C901
         self,
         scpi_response: ScpiResponse,
     ) -> AttributeResponse:
@@ -173,8 +175,6 @@ class AttributeClient:  # pylint: disable=too-few-public-methods
                     value = float(field_value)
                 elif field_type == "int":
                     value = int(field_value)
-                elif field_type == "packet_index":
-                    value = field_value
                 elif field_type == "arbitrary_block":
                     if not field_value.startswith(b"#"):
                         raise ValueError(

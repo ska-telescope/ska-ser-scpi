@@ -24,6 +24,7 @@ class AttributeDefinitionType(TypedDict):
     max_value: NotRequired[float]
     absolute_resolution: NotRequired[float]
     bit: NotRequired[int]
+    packet_item: NotRequired[int]
     value: NotRequired[SupportedAttributeType]
 
 
