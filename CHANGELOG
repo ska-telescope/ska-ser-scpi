@@ -2,6 +2,10 @@
 
 ## unreleased
 
+## 0.5.0
+
+[LOW-489] Field type packet-item
+
 ## 0.4.0
 
 * [LOW-505] Add support for IEEE 488.2 Definite Length Arbitrary Data Block responses
