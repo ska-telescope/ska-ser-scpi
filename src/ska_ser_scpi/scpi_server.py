@@ -55,27 +55,28 @@ class ScpiServer:  # pylint: disable=too-few-public-methods
                     self._field_map[field] = {}
                 if "field_type" in definition[method]:
                     attribute_type = definition[method]["field_type"]
-                    if attribute_type == "bit":
-                        bit = definition[method]["bit"]
+                    if attribute_type == "bit" or attribute_type == "packet_item":
+                        idx = definition[method][attribute_type]
                         if method not in self._field_map[field]:
                             self._field_map[field][method] = {
-                                "field_type": "bits",
+                                "field_type": attribute_type,
                                 "attributes": {},
                             }
                         self._field_map[field][method]["attributes"].update(
-                            {bit: attribute}
+                            {idx: attribute}
                         )
                     else:
-                        self._field_map[field].update(
-                            {
-                                f"{method}": {
-                                    "field_type": attribute_type,
-                                    "attribute": attribute,
-                                }
-                            }
-                        )
+                        field_info: _FieldDefinitionType = {
+                            "field_type": attribute_type,
+                            "attribute": attribute,
+                        }
+                        if attribute_type == "arbitrary_block":
+                            field_info["block_data_type"] = definition[method][
+                                "block_data_type"
+                            ]
+                        self._field_map[field][method] = field_info
                 else:
-                    self._field_map[field] = {f"{method}": {"attribute": attribute}}
+                    self._field_map[field] = {method: {"attribute": attribute}}
 
     def receive_send(self, scpi_request: ScpiRequest) -> ScpiResponse:
         """
@@ -110,7 +111,10 @@ class ScpiServer:  # pylint: disable=too-few-public-methods
         queries: list[str] = []
         for field in scpi_request.queries:
             definition = self._field_map[field]
-            if definition["read"]["field_type"] == "bits":
+            if (
+                definition["read"]["field_type"] == "bit"
+                or definition["read"]["field_type"] == "packet_item"
+            ):
                 queries.extend(definition["read"]["attributes"].values())
             else:
                 queries.append(definition["read"]["attribute"])
@@ -176,6 +180,13 @@ class ScpiServer:  # pylint: disable=too-few-public-methods
                 scpi_response.add_query_response(
                     field, b"1" if attribute_value else b"0"
                 )
+            elif attribute_type == "packet_item":
+                if scpi_response.responses.get(field) is None:
+                    appended_value = str(attribute_value)
+                else:
+                    field_value = scpi_response.responses.get(field, b"")
+                    appended_value = field_value.decode("utf-8") + f" {attribute_value}"
+                scpi_response.add_query_response(field, appended_value.encode("utf-8"))
             elif attribute_type == "arbitrary_block":
                 dtype = getattr(np, definition["block_data_type"])
                 data = np.fromiter(attribute_value, dtype=dtype).tobytes()

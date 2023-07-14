@@ -30,16 +30,52 @@ def interface_definition_fixture() -> InterfaceDefinitionType:
             "name": {"read": {"field": "NAME", "field_type": "str"}},
             "juiciness": {"read_write": {"field": "JUIC", "field_type": "float"}},
             "rotten": {"read_write": {"field": "ROTT", "field_type": "int"}},
-            "peeled": {"read": {"field": "PEEL", "field_type": "bool"}},
+            "peeled": {"read_write": {"field": "PEEL", "field_type": "bool"}},
             "overripe": {
                 "read_write": {"field": "FLAGS", "field_type": "bit", "bit": 0}
             },
-            "under-ripe": {"read": {"field": "FLAGS", "field_type": "bit", "bit": 1}},
-            "chilled": {"write": {"field": "FLAGS", "field_type": "bit", "bit": 7}},
+            "under-ripe": {
+                "read_write": {"field": "FLAGS", "field_type": "bit", "bit": 1}
+            },
+            "chilled": {
+                "read_write": {"field": "FLAGS", "field_type": "bit", "bit": 7}
+            },
+            "boiled": {
+                "read": {
+                    "field": "PROCESS",
+                    "field_type": "packet_item",
+                    "packet_item": 0,
+                },
+                "write": {"field": "BOIL", "field_type": "float"},
+            },
+            "fried": {
+                "read": {
+                    "field": "PROCESS",
+                    "field_type": "packet_item",
+                    "packet_item": 1,
+                },
+                "write": {"field": "FRY", "field_type": "float"},
+            },
+            "dried": {
+                "read": {
+                    "field": "PROCESS",
+                    "field_type": "packet_item",
+                    "packet_item": 2,
+                },
+                "write": {"field": "DRY", "field_type": "float"},
+            },
+            "fermented": {
+                "read": {
+                    "field": "PROCESS",
+                    "field_type": "packet_item",
+                    "packet_item": 3,
+                },
+                "write": {"field": "FERMENT", "field_type": "float"},
+            },
         },
         "sentinel_string": "\r\n",
         "argument_separator": " ",
-        "return_response": False,
+        "return_response": True,
     }
 
     interface_definition = expand_read_write_command(interface_definition)
@@ -53,7 +89,7 @@ def request_bytes_fixture() -> bytes:
 
     :returns: request bytes.
     """
-    return b"NAME?;JUIC?;ROTT?;PEEL?;FLAGS?"
+    return b"NAME?;JUIC?;ROTT?;PEEL?;FLAGS?;PROCESS?"
 
 
 @pytest.fixture(name="expected_response_bytes")
@@ -63,7 +99,7 @@ def expected_response_bytes_fixture() -> bytes:
 
     :returns: the expected response bytes.
     """
-    return b"orange;98.7;30;1;130"
+    return b"orange;98.7;30;1;130;0.1 0.2 0.3 0.4"
 
 
 @pytest.fixture(name="expected_attribute_request")
@@ -75,7 +111,17 @@ def expected_attribute_request_fixture() -> AttributeRequest:
     """
     attribute_request = AttributeRequest()
     attribute_request.set_queries(
-        "name", "juiciness", "rotten", "peeled", "overripe", "under-ripe"
+        "name",
+        "juiciness",
+        "rotten",
+        "peeled",
+        "overripe",
+        "under-ripe",
+        "chilled",
+        "boiled",
+        "fried",
+        "dried",
+        "fermented",
     )
     return attribute_request
 
@@ -95,6 +141,10 @@ def mock_attribute_server_fixture() -> unittest.mock.Mock:
     attribute_response.add_query_response("overripe", False)
     attribute_response.add_query_response("under-ripe", True)
     attribute_response.add_query_response("chilled", True)
+    attribute_response.add_query_response("boiled", 0.1)
+    attribute_response.add_query_response("fried", 0.2)
+    attribute_response.add_query_response("dried", 0.3)
+    attribute_response.add_query_response("fermented", 0.4)
 
     mock_bytes_client = unittest.mock.Mock()
     mock_bytes_client.receive_send.return_value = attribute_response
