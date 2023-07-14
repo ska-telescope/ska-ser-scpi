@@ -1,4 +1,5 @@
 """This module provides an attribute client."""
+import re
 from typing import TypedDict
 
 import numpy as np
@@ -53,15 +54,15 @@ class AttributeClient:  # pylint: disable=too-few-public-methods
                     self._field_map[field] = {}
                 if "field_type" in definition[method]:
                     attribute_type = definition[method]["field_type"]
-                    if attribute_type == "bit":
-                        bit = definition[method]["bit"]
+                    if attribute_type in ("bit", "packet_item"):
+                        idx = definition[method][attribute_type]  # type: ignore
                         if method not in self._field_map[field]:
                             self._field_map[field][method] = {
-                                "field_type": "bits",
+                                "field_type": attribute_type,
                                 "attributes": {},
                             }
                         self._field_map[field][method]["attributes"].update(
-                            {bit: attribute}
+                            {idx: attribute}
                         )
                     else:
                         field_info: _FieldDefinitionType = {
@@ -135,7 +136,8 @@ class AttributeClient:  # pylint: disable=too-few-public-methods
 
         return scpi_request
 
-    def _unmarshall_response(
+    # pylint: disable-next=too-many-locals, too-many-branches
+    def _unmarshall_response(  # noqa: C901
         self,
         scpi_response: ScpiResponse,
     ) -> AttributeResponse:
@@ -155,10 +157,15 @@ class AttributeClient:  # pylint: disable=too-few-public-methods
             definition = list(self._field_map[field].values())[0]
             field_type = definition["field_type"]
             value: SupportedAttributeType  # for the type checker
-            if field_type == "bits":
+            if field_type == "bit":
                 for bit, attribute in definition["attributes"].items():
                     mask = 1 << bit
                     value = bool(int(field_value) & mask)
+                    attribute_response.add_query_response(attribute, value)
+            elif field_type == "packet_item":
+                packet = re.split(" ", field_value.decode("utf-8"))
+                for idx, attribute in definition["attributes"].items():
+                    value = float(packet[idx])
                     attribute_response.add_query_response(attribute, value)
             else:
                 attribute = definition["attribute"]

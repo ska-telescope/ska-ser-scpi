@@ -58,6 +58,13 @@ def interface_definition_fixture() -> InterfaceDefinitionType:
                 "bit": (i - 1) % 100,
             }
         }
+        definition[f"packet_item{i}"] = {
+            "read_write": {
+                "field": f"PACKS{1+(i-1)//100}",
+                "field_type": "packet_item",
+                "packet_item": (i - 1) % 100,
+            }
+        }
         definition[f"arbitrary_block{i}"] = {
             "read": {
                 "field": f"ARRAY{i}",
@@ -101,6 +108,7 @@ def initial_values_fixture(
         values[f"boolean{i}"] = i % 2 == 0
         values[f"int{i}"] = i * 2
         values[f"bit{i}"] = i % 2 == 0
+        values[f"packet_item{i}"] = i * 0.15
         attr_def = interface_definition["attributes"][f"arbitrary_block{i}"]["read"]
         dtype = getattr(np, attr_def["block_data_type"])
         values[f"arbitrary_block{i}"] = list(
