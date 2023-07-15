@@ -52,7 +52,7 @@ class AttributeClient:  # pylint: disable=too-few-public-methods
         for attribute, definition in self._attribute_map.items():
             for method in list(definition.keys()):
                 field = definition[method]["field"]
-                logger.info("Add field %s", field)
+                logger.info("Add %s field %s", method, field)
                 if field not in self._field_map:
                     self._field_map[field] = {}
                 if "field_type" in definition[method]:

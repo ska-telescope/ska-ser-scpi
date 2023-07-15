@@ -48,18 +48,22 @@ class ScpiServer:  # pylint: disable=too-few-public-methods
         self._attribute_map = attribute_definitions
 
         self._field_map: dict[str, dict[str, _FieldDefinitionType]] = {}
+        logger.debug("Process SCPI attribute map %s", self._attribute_map)
         for attribute, definition in self._attribute_map.items():
             logger.debug("Process SCPI attribute %s", attribute)
-            for method in list(definition.keys()):
+            logger.debug("Process SCPI definition %s", definition)
+            # for method in list(definition.keys()):
+            for method, definition_method in definition.items():
                 logger.debug("Process SCPI method %s", method)
-                field = definition[method]["field"]
+                # definition_method = dict(definition[method])
+                field = definition_method["field"]
                 if field not in self._field_map:
                     logger.info("Add field %s", field)
                     self._field_map[field] = {}
-                if "field_type" in definition[method]:
-                    attribute_type = definition[method]["field_type"]
+                if "field_type" in definition_method:
+                    attribute_type = definition_method["field_type"]
                     if attribute_type == "bit":
-                        bit = definition[method]["bit"]
+                        bit = definition_method["bit"]
                         if method not in self._field_map[field]:
                             self._field_map[field][method] = {
                                 "field_type": "bits",
