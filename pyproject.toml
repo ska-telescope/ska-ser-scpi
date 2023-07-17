@@ -33,7 +33,7 @@ flake8-pyproject = "^1.2.3"
 [tool.poetry.group.docs.dependencies]
 Sphinx = "^5.2"
 PyYAML = "^6.0"
-sphinx-rtd-theme = "^1.0"
+ska-ser-sphinx-theme = "^0.1.1"
 sphinx-autodoc-typehints = "^1.19"
 ska-ser-devices = "^0.1.1"
 typing-extensions = "^4.5.0"
