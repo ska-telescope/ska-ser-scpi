@@ -1,7 +1,7 @@
 include .make/base.mk
 include .make/python.mk
 
-DOCS_SPHINXOPTS = -n -W --keep-going
+DOCS_SPHINXOPTS = -W --keep-going
 
 docs-pre-build:
 	poetry config virtualenvs.create false

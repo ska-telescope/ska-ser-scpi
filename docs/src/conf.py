@@ -4,9 +4,6 @@ import sys
 
 sys.path.insert(0, os.path.abspath('../../src'))
 
-def setup(app):
-    app.add_css_file('css/custom.css')
-
 project = 'ska-ser-scpi'
 copyright = '2023, SKAO'
 author = 'SKAO'
@@ -18,17 +15,11 @@ extensions = [
     "sphinx_autodoc_typehints",
 ]
 
-templates_path = ['_templates']
 exclude_patterns = []
 
-html_theme = 'sphinx_rtd_theme'
-html_static_path = ['_static']
+html_theme = "ska_ser_sphinx_theme"
 
-html_context = {
-    "favicon": "img/favicon_mono.ico",
-    "logo": "img/logo.png",
-    "theme_logo_only": True,
-}
+html_context = {}
 
 # autodoc_mock_imports = [
 # ]
@@ -41,6 +32,8 @@ intersphinx_mapping = {
     ),
     "numpy": ("https://numpy.org/doc/stable/", None),
 }
+
+nitpicky = True
 
 nitpick_ignore = [
     ('py:class', 'numpy.number'),
