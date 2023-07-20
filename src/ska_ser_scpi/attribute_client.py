@@ -1,6 +1,7 @@
 """This module provides an attribute client."""
 import re
-from typing import TypedDict
+from operator import itemgetter
+from typing import Any, Callable, TypedDict
 
 import numpy as np
 from typing_extensions import NotRequired
@@ -14,12 +15,14 @@ from .scpi_payload import ScpiRequest, ScpiResponse
 class _FieldDefinitionType(TypedDict):
     # TODO: Tighten this up.
     # field_type not always required?
-    # "attributes" required iff field_type == "bits",
-    # "attribute" not allowed if field_type == "bits"
     field_type: NotRequired[str]
     block_data_type: NotRequired[str]
-    attribute: NotRequired[str]
-    attributes: NotRequired[dict[int, str]]
+    attributes: dict[str, Callable[[Any], Any] | None]
+
+
+class _BitField(int):
+    def __getitem__(self, item: int) -> bool:
+        return bool(self & 1 << item)
 
 
 class AttributeClient:  # pylint: disable=too-few-public-methods
@@ -49,33 +52,33 @@ class AttributeClient:  # pylint: disable=too-few-public-methods
         self._field_map: dict[str, dict[str, _FieldDefinitionType]] = {}
         for attribute, definition in self._attribute_map.items():
             for method in list(definition.keys()):
+                attribute_type = definition[method].get("field_type", "str")
                 field = definition[method]["field"]
+
                 if field not in self._field_map:
                     self._field_map[field] = {}
-                if "field_type" in definition[method]:
-                    attribute_type = definition[method]["field_type"]
-                    if attribute_type in ("bit", "packet_item"):
-                        idx = definition[method][attribute_type]  # type: ignore
-                        if method not in self._field_map[field]:
-                            self._field_map[field][method] = {
-                                "field_type": attribute_type,
-                                "attributes": {},
-                            }
-                        self._field_map[field][method]["attributes"].update(
-                            {idx: attribute}
-                        )
-                    else:
-                        field_info: _FieldDefinitionType = {
-                            "field_type": attribute_type,
-                            "attribute": attribute,
-                        }
-                        if attribute_type == "arbitrary_block":
-                            field_info["block_data_type"] = definition[method][
-                                "block_data_type"
-                            ]
-                        self._field_map[field][method] = field_info
-                else:
-                    self._field_map[field] = {method: {"attribute": attribute}}
+                field_info = self._field_map[field].setdefault(
+                    method,
+                    {"field_type": attribute_type, "attributes": {}},
+                )
+
+                idx = definition[method].get("index")
+
+                # backwards compat
+                bit = definition[method].get("bit")
+                if bit is not None:
+                    idx = bit
+                packet_item = definition[method].get("packet_item")
+                if packet_item is not None:
+                    idx = packet_item
+
+                transform_fn = itemgetter(idx) if idx is not None else None
+                field_info["attributes"][attribute] = transform_fn
+
+                if attribute_type == "arbitrary_block":
+                    field_info["block_data_type"] = definition[method][
+                        "block_data_type"
+                    ]
 
     def send_receive(self, attribute_request: AttributeRequest) -> AttributeResponse:
         """
@@ -136,7 +139,6 @@ class AttributeClient:  # pylint: disable=too-few-public-methods
 
         return scpi_request
 
-    # pylint: disable-next=too-many-locals, too-many-branches
     def _unmarshall_response(  # noqa: C901
         self,
         scpi_response: ScpiResponse,
@@ -158,46 +160,45 @@ class AttributeClient:  # pylint: disable=too-few-public-methods
             field_type = definition["field_type"]
             value: SupportedAttributeType  # for the type checker
             if field_type == "bit":
-                for bit, attribute in definition["attributes"].items():
-                    mask = 1 << bit
-                    value = bool(int(field_value) & mask)
-                    attribute_response.add_query_response(attribute, value)
+                value = _BitField(field_value)
             elif field_type == "packet_item":
-                packet = re.split(" ", field_value.decode("utf-8"))
-                for idx, attribute in definition["attributes"].items():
-                    value = float(packet[idx])
-                    attribute_response.add_query_response(attribute, value)
+                value = [float(x) for x in re.split(b" ", field_value)]
+            elif field_type == "bool":
+                value = field_value == b"1"
+            elif field_type == "float":
+                value = float(field_value)
+            elif field_type == "int":
+                value = int(field_value)
+            elif field_type == "arbitrary_block":
+                if not field_value.startswith(b"#"):
+                    raise ValueError(
+                        f"Malformed value for arbitrary_block field {field} "
+                        f"does not start with '#'"
+                    )
+                # an index into bytes returns an int, not bytes, so we must slice
+                len_head = 2 + int(field_value[1:2])
+                len_data = int(field_value[2:len_head])
+                data_bytes = field_value[len_head:]
+                if len(data_bytes) != len_data:
+                    raise ValueError(
+                        f"Received {len(data_bytes)} bytes, "
+                        f"expected {len_data} for arbitrary_block field {field}"
+                    )
+                dtype = getattr(np, definition["block_data_type"])
+                # Return a list because attribute values are used in equality
+                # comparisons for if conditions in various places. np.ndarray
+                # breaks that by overriding == to return an element-wise array
+                # which raises ValueError when coerced to bool.
+                value = list(np.frombuffer(data_bytes, dtype=dtype))
+            elif field_type == "str":
+                value = field_value.decode("utf-8")
             else:
-                attribute = definition["attribute"]
-                if field_type == "bool":
-                    value = field_value == b"1"
-                elif field_type == "float":
-                    value = float(field_value)
-                elif field_type == "int":
-                    value = int(field_value)
-                elif field_type == "arbitrary_block":
-                    if not field_value.startswith(b"#"):
-                        raise ValueError(
-                            f"Malformed value for arbitrary_block field {field} "
-                            f"does not start with '#'"
-                        )
-                    # an index into bytes returns an int, not bytes, so we must slice
-                    len_head = 2 + int(field_value[1:2])
-                    len_data = int(field_value[2:len_head])
-                    data_bytes = field_value[len_head:]
-                    if len(data_bytes) != len_data:
-                        raise ValueError(
-                            f"Received {len(data_bytes)} bytes, "
-                            f"expected {len_data} for arbitrary_block field {field}"
-                        )
-                    dtype = getattr(np, definition["block_data_type"])
-                    # Return a list because attribute values are used in equality
-                    # comparisons for if conditions in various places. np.ndarray
-                    # breaks that by overriding == to return an element-wise array
-                    # which raises ValueError when coerced to bool.
-                    value = list(np.frombuffer(data_bytes, dtype=dtype))
-                else:
-                    value = field_value.decode("utf-8")
-                attribute_response.add_query_response(attribute, value)
+                raise ValueError(f'field_type "{field_type}" is not supported')
+
+            for attribute, xform in definition["attributes"].items():
+                attribute_response.add_query_response(
+                    attribute,
+                    value if xform is None else xform(value),
+                )
 
         return attribute_response
