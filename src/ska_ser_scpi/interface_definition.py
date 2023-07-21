@@ -10,7 +10,8 @@ from typing import Any, TypedDict
 import numpy as np
 from typing_extensions import NotRequired
 
-SupportedAttributeType = bool | float | int | str | list[float | int | np.number[Any]]
+SupportedScalarType = bool | float | int | str | np.number[Any]
+SupportedAttributeType = SupportedScalarType | list[SupportedScalarType]
 
 
 class AttributeDefinitionType(TypedDict):
@@ -23,7 +24,6 @@ class AttributeDefinitionType(TypedDict):
     min_value: NotRequired[float]
     max_value: NotRequired[float]
     absolute_resolution: NotRequired[float]
-    index: NotRequired[int]
     bit: NotRequired[int]
     packet_item: NotRequired[int]
     value: NotRequired[SupportedAttributeType]

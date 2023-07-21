@@ -1,23 +1,22 @@
 """This module provides an attribute client."""
 import re
 from operator import itemgetter
-from typing import Any, Callable, TypedDict
+from typing import Any, Callable, TypedDict, cast
 
 import numpy as np
-from typing_extensions import NotRequired
 
 from .attribute_payload import AttributeRequest, AttributeResponse
 from .interface_definition import AttributeDefinitionType, SupportedAttributeType
 from .scpi_client import ScpiClient
 from .scpi_payload import ScpiRequest, ScpiResponse
 
+_TransformFn = Callable[[Any], SupportedAttributeType]
+
 
 class _FieldDefinitionType(TypedDict):
-    # TODO: Tighten this up.
-    # field_type not always required?
-    field_type: NotRequired[str]
-    block_data_type: NotRequired[str]
-    attributes: dict[str, Callable[[Any], Any] | None]
+    field_type: str
+    block_data_type: str | None
+    attributes: dict[str, _TransformFn | None]
 
 
 class _BitField(int):
@@ -46,39 +45,31 @@ class AttributeClient:  # pylint: disable=too-few-public-methods
             the SCPI interface supports.
         """
         self._scpi_client = scpi_client
-
         self._attribute_map = attribute_definitions
+        self._field_map: dict[str, _FieldDefinitionType] = {}
 
-        self._field_map: dict[str, dict[str, _FieldDefinitionType]] = {}
-        for attribute, definition in self._attribute_map.items():
-            for method in list(definition.keys()):
-                attribute_type = definition[method].get("field_type", "str")
-                field = definition[method]["field"]
+        for attribute, definitions in self._attribute_map.items():
+            if "read" not in definitions:
+                continue
 
-                if field not in self._field_map:
-                    self._field_map[field] = {}
-                field_info = self._field_map[field].setdefault(
-                    method,
-                    {"field_type": attribute_type, "attributes": {}},
-                )
+            definition = definitions["read"]
+            field_type = definition.get("field_type", "str")
 
-                idx = definition[method].get("index")
+            transform_fn = None
+            if field_type in ("bit", "packet_item"):
+                transform_fn = itemgetter(definition[field_type])  # type: ignore
 
-                # backwards compat
-                bit = definition[method].get("bit")
-                if bit is not None:
-                    idx = bit
-                packet_item = definition[method].get("packet_item")
-                if packet_item is not None:
-                    idx = packet_item
+            attributes: dict[str, _TransformFn | None] = {attribute: transform_fn}
 
-                transform_fn = itemgetter(idx) if idx is not None else None
-                field_info["attributes"][attribute] = transform_fn
-
-                if attribute_type == "arbitrary_block":
-                    field_info["block_data_type"] = definition[method][
-                        "block_data_type"
-                    ]
+            scpi_command = definition["field"]
+            if scpi_command not in self._field_map:
+                self._field_map[scpi_command] = {
+                    "field_type": field_type,
+                    "attributes": attributes,
+                    "block_data_type": definition.get("block_data_type"),
+                }
+            else:
+                self._field_map[scpi_command]["attributes"].update(attributes)
 
     def send_receive(self, attribute_request: AttributeRequest) -> AttributeResponse:
         """
@@ -156,7 +147,7 @@ class AttributeClient:  # pylint: disable=too-few-public-methods
         attribute_response = AttributeResponse()
 
         for field, field_value in scpi_response.responses.items():
-            definition = list(self._field_map[field].values())[0]
+            definition = self._field_map[field]
             field_type = definition["field_type"]
             value: SupportedAttributeType  # for the type checker
             if field_type == "bit":
@@ -184,7 +175,7 @@ class AttributeClient:  # pylint: disable=too-few-public-methods
                         f"Received {len(data_bytes)} bytes, "
                         f"expected {len_data} for arbitrary_block field {field}"
                     )
-                dtype = getattr(np, definition["block_data_type"])
+                dtype = getattr(np, cast(str, definition["block_data_type"]))
                 # Return a list because attribute values are used in equality
                 # comparisons for if conditions in various places. np.ndarray
                 # breaks that by overriding == to return an element-wise array

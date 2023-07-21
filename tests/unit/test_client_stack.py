@@ -206,5 +206,5 @@ def test_client_stack(
         attribute request.
     """
     attribute_response = attribute_client.send_receive(attribute_request)
-    assert attribute_response == expected_attribute_response
+    assert attribute_response.responses == expected_attribute_response.responses
     mock_bytes_client.assert_called_with(expected_bytes_call)
