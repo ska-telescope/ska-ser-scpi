@@ -14,6 +14,10 @@ url = 'https://artefact.skao.int/repository/pypi-internal/simple'
 python = "^3.10"
 ska-ser-devices = "^0.1.1"
 numpy = "^1.23"
+typing-extensions = "^4.5.0"
+
+[tool.poetry.group.dev]
+optional = true
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.3.0"
@@ -29,6 +33,9 @@ darglint = "^1.8.1"
 mypy = "^1.4.1"
 types-pyyaml = "^6.0.12.9"
 flake8-pyproject = "^1.2.3"
+
+[tool.poetry.group.docs]
+optional = true
 
 [tool.poetry.group.docs.dependencies]
 Sphinx = "^6"
