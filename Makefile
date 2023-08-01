@@ -1,11 +1,14 @@
 include .make/base.mk
 include .make/python.mk
 
-DOCS_SPHINXOPTS = -W --keep-going
+# Get rid of these once the pipeline explicitly installs --with dev
+python-pre-lint:
+	poetry install --with dev
 
-docs-pre-build:
-	poetry config virtualenvs.create false
-	poetry install --no-root --only docs
+python-pre-test:
+	poetry install --with dev
+
+DOCS_SPHINXOPTS = -W --keep-going
 
 PYTHON_LINE_LENGTH = 88
 
