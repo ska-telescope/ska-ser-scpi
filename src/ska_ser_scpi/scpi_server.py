@@ -1,6 +1,7 @@
 """This module provides a SCPI server."""
 from __future__ import annotations
 
+import logging
 from typing import TypedDict
 
 import numpy as np
@@ -10,6 +11,8 @@ from .attribute_payload import AttributeRequest, AttributeResponse
 from .attribute_server import AttributeServerProtocol
 from .interface_definition import AttributeDefinitionType
 from .scpi_payload import ScpiRequest, ScpiResponse
+
+_module_logger = logging.getLogger(__name__)
 
 
 class _FieldDefinitionType(TypedDict):
@@ -76,6 +79,9 @@ class ScpiServer:  # pylint: disable=too-few-public-methods
                         )
                 else:
                     self._field_map[field] = {f"{method}": {"attribute": attribute}}
+        if _module_logger.isEnabledFor(logging.DEBUG):
+            for field in self._field_map:
+                _module_logger.debug(f"Field %s : %s", field, self._field_map[field])
 
     def receive_send(self, scpi_request: ScpiRequest) -> ScpiResponse:
         """
@@ -86,6 +92,7 @@ class ScpiServer:  # pylint: disable=too-few-public-methods
         :returns: details of the SCPI response.
         """
         attribute_request = self._unmarshall_request(scpi_request)
+        _module_logger.debug(f"Attribute Request: {attribute_request}")
         attribute_response = self._attribute_server.receive_send(attribute_request)
         scpi_response = self._marshall_response(attribute_response)
         return scpi_response

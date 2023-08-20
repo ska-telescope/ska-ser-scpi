@@ -1,10 +1,13 @@
 """This module provides a simulator framework for a SCPI instrument."""
+import logging
 from ska_ser_devices.client_server import ApplicationServer, SentinelBytesMarshaller
 
 from .attribute_payload import AttributeRequest, AttributeResponse
 from .bytes_server import ScpiBytesServer
 from .interface_definition import InterfaceDefinitionType, SupportedAttributeType
 from .scpi_server import ScpiServer
+
+_module_logger = logging.getLogger(__name__)
 
 
 class ScpiSimulator(ApplicationServer[bytes, bytes]):
@@ -47,6 +50,7 @@ class ScpiSimulator(ApplicationServer[bytes, bytes]):
             marshaller.marshall,
             scpi_string_server.receive_send,
         )
+        _module_logger.debug(f"Attribute values {self._attribute_values}")
 
     def receive_send(self, attribute_request: AttributeRequest) -> AttributeResponse:
         """
@@ -73,6 +77,7 @@ class ScpiSimulator(ApplicationServer[bytes, bytes]):
                 attribute_value = attribute_args[0]  # TODO: Handle >0 error
                 self.set_attribute(attribute_name, attribute_value)
             else:
+                _module_logger.debug(f"Command method {command_method}")
                 command_method(*attribute_args)
 
         attribute_response = AttributeResponse()
