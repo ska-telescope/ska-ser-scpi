@@ -1,4 +1,5 @@
 """This module provides an attribute client."""
+import logging
 import re
 from typing import TypedDict
 
@@ -9,6 +10,8 @@ from .attribute_payload import AttributeRequest, AttributeResponse
 from .interface_definition import AttributeDefinitionType, SupportedAttributeType
 from .scpi_client import ScpiClient
 from .scpi_payload import ScpiRequest, ScpiResponse
+
+_module_logger = logging.getLogger(__name__)
 
 
 class _FieldDefinitionType(TypedDict):
@@ -157,6 +160,7 @@ class AttributeClient:  # pylint: disable=too-few-public-methods
             definition = list(self._field_map[field].values())[0]
             field_type = definition["field_type"]
             value: SupportedAttributeType  # for the type checker
+            _module_logger.info(f"Unmarshall %s value %s",  field_type, field_value)
             if field_type == "bit":
                 for bit, attribute in definition["attributes"].items():
                     mask = 1 << bit

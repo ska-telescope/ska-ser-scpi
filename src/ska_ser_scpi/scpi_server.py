@@ -52,8 +52,15 @@ class ScpiServer:  # pylint: disable=too-few-public-methods
 
         self._field_map: dict[str, dict[str, _FieldDefinitionType]] = {}
         for attribute, definition in self._attribute_map.items():
+            _module_logger.debug(
+                "Add attribute [%s] definition [%s]", attribute, definition
+            )
             for method in list(definition.keys()):
-                field = definition[method]["field"]
+                try:
+                    field = definition[method]["field"]
+                except TypeError:
+                    _module_logger.error("Could not %s field", method)
+                    continue
                 if field not in self._field_map:
                     self._field_map[field] = {}
                 if "field_type" in definition[method]:
@@ -117,6 +124,7 @@ class ScpiServer:  # pylint: disable=too-few-public-methods
         queries: list[str] = []
         for field in scpi_request.queries:
             definition = self._field_map[field]
+            _module_logger.debug("Definition %s", definition)
             if (
                 definition["read"]["field_type"] == "bit"
                 or definition["read"]["field_type"] == "packet_item"
@@ -170,11 +178,16 @@ class ScpiServer:  # pylint: disable=too-few-public-methods
         scpi_response = ScpiResponse()
 
         for attribute in attribute_response.responses:
+            _module_logger.debug("Marshall attribute %s", attribute)
             definition = list(self._attribute_map[attribute].values())[0]
             attribute_type = definition["field_type"]
             field = definition["field"]
             attribute_value = attribute_response.responses[attribute]
-
+            _module_logger.debug(
+                "Marshall attribute type %s value '%s'",
+                attribute_type,
+                attribute_value
+            )
             if attribute_type == "bit":
                 field_value = scpi_response.responses.get(field, b"0")
                 if attribute_value:
