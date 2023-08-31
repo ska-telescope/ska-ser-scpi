@@ -63,6 +63,7 @@ class ScpiBytesServer:  # pylint: disable=too-few-public-methods
                 scpi_request.add_setop(*command.rsplit(self._argument_separator, 1))
         return scpi_request
 
+    # pylint: disable-next=no-self-use
     def _marshall_response(self, scpi_response: ScpiResponse) -> bytes:
         """
         Marshall a SCPI response object into a bytestring.
