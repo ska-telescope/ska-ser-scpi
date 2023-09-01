@@ -92,6 +92,11 @@ class ScpiRequest:
         return True
 
     def __repr__(self) -> str:
+        """
+        Representation of information used for logging.
+
+        :returns: readable string
+        """
         return f"queries {self._queries} setops {self._setops}"
 
 
@@ -142,4 +147,9 @@ class ScpiResponse:
         return True
 
     def __repr__(self) -> str:
+        """
+        Representation of information used for logging.
+
+        :returns: readable string
+        """
         return f"responses {self._responses}"
