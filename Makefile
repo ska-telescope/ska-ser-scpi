@@ -1,6 +1,8 @@
 include .make/base.mk
 include .make/python.mk
 
+-include PrivateRules.mak
+
 DOCS_SPHINXOPTS = -W --keep-going
 
 docs-pre-build:

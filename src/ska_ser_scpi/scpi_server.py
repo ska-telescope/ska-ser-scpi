@@ -92,7 +92,7 @@ class ScpiServer:  # pylint: disable=too-few-public-methods
                     "Field map '%s' to %s", field, self._field_map[field]
                 )
 
-    def receive_send(self, scpi_request: ScpiRequest) -> ScpiResponse:
+    def receive_send(self: ScpiServer, scpi_request: ScpiRequest) -> ScpiResponse:
         """
         Send a SCPI request, and receive a SCPI response.
 
@@ -138,8 +138,15 @@ class ScpiServer:  # pylint: disable=too-few-public-methods
             if field in self._field_map:
                 definition = self._field_map[field]
             else:
-                # This is how they roll at Anritsu folks, e.g. 'TRAC:DATA? 1'
-                new_field = "%s %s" % (field, args[0])
+                # There is a problem with non-standard coommands, e.g. 'TRAC:DATA? 1'
+                # That is how they roll at Anritsu, folks!
+                # The SCPI field ('TRAC:DATA? 1') is not in setops, as it has been split
+                # into field ('TRAC:DATA?') and argument ('1').
+                # Make a query of it by combining the above setops field and argument.
+                # The assumption is that the argument seperator is a space - this will
+                # work for the Anritsu MS2090A.
+                # TODO find a way to access the value for argument_separator here
+                new_field = f"{field} {args[0]}"
                 _module_logger.debug(
                     "No definition for field '%s', try '%s'", field, new_field
                 )
@@ -177,7 +184,7 @@ class ScpiServer:  # pylint: disable=too-few-public-methods
                     _module_logger.error(
                         "Cannot unmarshall SCPI field %s to attribute type %s",
                         field,
-                        field_type
+                        field_type,
                     )
                     raise ValueError(
                         f"Cannot unmarshall SCPI field {field} to "
@@ -185,7 +192,9 @@ class ScpiServer:  # pylint: disable=too-few-public-methods
                     )
 
         attribute_request.set_queries(*queries)
-        _module_logger.debug("Unmarshall attribute request: %s", repr(attribute_request))
+        _module_logger.debug(
+            "Unmarshall attribute request: %s", repr(attribute_request)
+        )
         return attribute_request
 
     def _marshall_response(self, attribute_response: AttributeResponse) -> ScpiResponse:
