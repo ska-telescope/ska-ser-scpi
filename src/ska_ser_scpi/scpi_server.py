@@ -18,7 +18,7 @@ _module_logger = logging.getLogger(__name__)
 class _FieldDefinitionType(TypedDict):
     # TODO: Tighten this up.
     # field_type not always required?
-    # "attributes" required iff field_type == "bits",
+    # "attributes" required if field_type == "bits",
     # "attribute" not allowed if field_type == "bits"
     field_type: NotRequired[str]
     attribute: NotRequired[str]
@@ -29,11 +29,10 @@ class ScpiServer:  # pylint: disable=too-few-public-methods
     """
     Service for receiving/sending SCPI payloads from/to a client.
 
-    Used to receive a SCPI request object, and respond with a SCPI
-    response object.
+    Used to receive a SCPI request object, and respond with a SCPI response object.
     """
 
-    def __init__(
+    def __init__(  # noqa: C901
         self,
         attribute_server: AttributeServerProtocol,
         attribute_definitions: dict[str, dict[str, AttributeDefinitionType]],
@@ -89,7 +88,9 @@ class ScpiServer:  # pylint: disable=too-few-public-methods
         if _module_logger.isEnabledFor(logging.DEBUG):
             # pylint: disable-next=consider-using-dict-items
             for field in self._field_map:
-                _module_logger.debug("Field %s : %s", field, self._field_map[field])
+                _module_logger.debug(
+                    "Field map '%s' to %s", field, self._field_map[field]
+                )
 
     def receive_send(self, scpi_request: ScpiRequest) -> ScpiResponse:
         """
@@ -100,9 +101,9 @@ class ScpiServer:  # pylint: disable=too-few-public-methods
         :returns: details of the SCPI response.
         """
         attribute_request = self._unmarshall_request(scpi_request)
-        _module_logger.debug("Attribute Request: %s", attribute_request)
         attribute_response = self._attribute_server.receive_send(attribute_request)
         scpi_response = self._marshall_response(attribute_response)
+        _module_logger.debug("Receive/send %s", repr(scpi_response))
         return scpi_response
 
     # pylint: disable-next=too-many-locals, too-many-branches
@@ -117,15 +118,14 @@ class ScpiServer:  # pylint: disable=too-few-public-methods
 
         :returns: an attribute request object.
 
-        :raises ValueError: if an unsupported attribute type is
-            encountered.
+        :raises ValueError: if an unsupported attribute type is encountered.
         """
+        _module_logger.debug("Unmarshall SCPI request %s", repr(scpi_request))
         attribute_request = AttributeRequest()
 
         queries: list[str] = []
         for field in scpi_request.queries:
             definition = self._field_map[field]
-            _module_logger.debug("Definition %s", definition)
             if (
                 definition["read"]["field_type"] == "bit"
                 or definition["read"]["field_type"] == "packet_item"
@@ -133,10 +133,24 @@ class ScpiServer:  # pylint: disable=too-few-public-methods
                 queries.extend(definition["read"]["attributes"].values())
             else:
                 queries.append(definition["read"]["attribute"])
-        attribute_request.set_queries(*queries)
 
         for field, args in scpi_request.setops:
-            definition = self._field_map[field]
+            if field in self._field_map:
+                definition = self._field_map[field]
+            else:
+                # This is how they roll at Anritsu folks, e.g. 'TRAC:DATA? 1'
+                new_field = "%s %s" % (field, args[0])
+                _module_logger.debug(
+                    "No definition for field '%s', try '%s'", field, new_field
+                )
+                if new_field in self._field_map:
+                    definition = self._field_map[new_field]
+                    queries.append(definition["read"]["attribute"])
+                else:
+                    _module_logger.warning(
+                        "No definition for field '%s' or '%s'", field, new_field
+                    )
+                continue
             field_type = definition["write"].get("field_type", None)
             if field_type == "bits":
                 value = int(args[0])  # TODO: Handle >1 args error case
@@ -160,11 +174,18 @@ class ScpiServer:  # pylint: disable=too-few-public-methods
                 elif field_type == "str":
                     attribute_request.add_setop(attribute, *args)
                 else:
+                    _module_logger.error(
+                        "Cannot unmarshall SCPI field %s to attribute type %s",
+                        field,
+                        field_type
+                    )
                     raise ValueError(
                         f"Cannot unmarshall SCPI field {field} to "
                         f"attribute type {field_type}."
                     )
 
+        attribute_request.set_queries(*queries)
+        _module_logger.debug("Unmarshall attribute request: %s", repr(attribute_request))
         return attribute_request
 
     def _marshall_response(self, attribute_response: AttributeResponse) -> ScpiResponse:
@@ -184,9 +205,6 @@ class ScpiServer:  # pylint: disable=too-few-public-methods
             attribute_type = definition["field_type"]
             field = definition["field"]
             attribute_value = attribute_response.responses[attribute]
-            _module_logger.debug(
-                "Marshall attribute type %s value '%s'", attribute_type, attribute_value
-            )
             if attribute_type == "bit":
                 field_value = scpi_response.responses.get(field, b"0")
                 if attribute_value:
@@ -213,4 +231,5 @@ class ScpiServer:  # pylint: disable=too-few-public-methods
             else:
                 scpi_response.add_query_response(field, str(attribute_value).encode())
 
+        _module_logger.debug("Marshall response %s", repr(scpi_response))
         return scpi_response

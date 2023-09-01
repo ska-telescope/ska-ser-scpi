@@ -91,6 +91,9 @@ class ScpiRequest:
             return False
         return True
 
+    def __repr__(self):
+        return f"queries {self._queries} setops {self._setops}"
+
 
 class ScpiResponse:
     """
@@ -137,3 +140,6 @@ class ScpiResponse:
         if self._responses != other._responses:
             return False
         return True
+
+    def __repr__(self):
+        return f"responses {self._responses}"
