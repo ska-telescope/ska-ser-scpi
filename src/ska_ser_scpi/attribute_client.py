@@ -160,7 +160,7 @@ class AttributeClient:  # pylint: disable=too-few-public-methods
             definition = list(self._field_map[field].values())[0]
             field_type = definition["field_type"]
             value: SupportedAttributeType  # for the type checker
-            _module_logger.info("Unmarshall %s value %s", field_type, field_value)
+            _module_logger.debug("Unmarshall %s value %s", field_type, field_value)
             if field_type == "bit":
                 for bit, attribute in definition["attributes"].items():
                     mask = 1 << bit

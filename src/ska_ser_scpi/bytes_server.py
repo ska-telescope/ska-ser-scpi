@@ -1,8 +1,12 @@
 """This module provides a SCPI bytes server."""
 from __future__ import annotations
 
+import logging
+
 from .scpi_payload import ScpiRequest, ScpiResponse
 from .scpi_server import ScpiServer
+
+_module_logger = logging.getLogger(__name__)
 
 
 class ScpiBytesServer:  # pylint: disable=too-few-public-methods
@@ -43,6 +47,9 @@ class ScpiBytesServer:  # pylint: disable=too-few-public-methods
         scpi_request = self._unmarshall_request(request_bytes)
         scpi_response = self._scpi_server.receive_send(scpi_request)
         response_bytes = self._marshall_response(scpi_response)
+        _module_logger.debug(
+            "SCPI bytes receive %s send %s", request_bytes, response_bytes
+        )
         return response_bytes
 
     def _unmarshall_request(self, request_bytes: bytes) -> ScpiRequest:
@@ -59,6 +66,9 @@ class ScpiBytesServer:  # pylint: disable=too-few-public-methods
         for command in commands:
             if command.endswith("?"):
                 scpi_request.add_query(command[:-1])
+            # Check for commands like 'TRAC:DATA? 1' used by Anritsu
+            elif "?" in command:
+                scpi_request.add_query(command)
             else:
                 scpi_request.add_setop(*command.rsplit(self._argument_separator, 1))
         return scpi_request

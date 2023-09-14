@@ -1,6 +1,7 @@
 """This module provides a SCPI client."""
 from __future__ import annotations
 
+import logging
 import re
 import socket
 from typing import Final
@@ -8,6 +9,8 @@ from typing import Final
 from ska_ser_devices.client_server.application import ApplicationClient
 
 from .scpi_payload import ScpiRequest, ScpiResponse
+
+_module_logger = logging.getLogger(__name__)
 
 
 class ScpiClient:  # pylint: disable=too-few-public-methods
@@ -94,6 +97,9 @@ class ScpiClient:  # pylint: disable=too-few-public-methods
                     break
 
         scpi_response = self._unmarshall_response(responses, response_fields)
+        _module_logger.debug(
+            "SCPI client: %s %s", repr(scpi_request), repr(scpi_response)
+        )
         return scpi_response
 
     def _marshall_request(
@@ -118,7 +124,11 @@ class ScpiClient:  # pylint: disable=too-few-public-methods
         queries = []
         if scpi_request.queries:
             for query in scpi_request.queries:
-                query_str = f"{query}?"
+                # Check for commands like 'TRAC:DATA? 1' used by Anritsu
+                if "?" not in query:
+                    query_str = f"{query}?"
+                else:
+                    query_str = f"{query}"
                 queries.append(query_str.encode(self._encoding))
             if self._chain:
                 queries = [b";".join(queries)]
